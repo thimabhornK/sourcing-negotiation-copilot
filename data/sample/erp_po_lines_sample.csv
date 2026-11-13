@@ -1,0 +1,41 @@
+po_number,line_no,vendor_name,material_code,description,qty,uom,unit_price,currency,po_date,promised_date,received_date,qc_pass_rate
+PO703017,3,"Mekong Industrial Co., Ltd.",MAT-0053,Copper Wire spec 368,7084,kgs,US$9.683386,US$,16/06/2024,2024-07-16,13/07/2024,0.91
+PO700799,2,Bangkok Polymer,MAT-0008,Steel Sheet spec 238,2757,kg,46.324916,THB,2022-06-22,2022-07-20,2022-07-17,0.988
+PO712562,3,"Golden Alloy co.,ltd.",MAT-0004,Copper Wire spec 164,520,kgs,8.855447,Euro,2023-03-28,30 Apr 2023,2023-05-20,0.954
+PO706515,2,Eastern Industrial,MAT-0032,Copper Wire spec 106,"3,001",Kg,352.933168,THB,2023-07-12,2023-07-26,2023-07-23,0.946
+PO713313,1,Union Polymer Co Ltd,MAT-0053,Copper Wire spec 368,"15,683",kgs,360.124786,฿,2023-06-25,2023-08-21,19/08/2566,0.991
+PO705720,2,Pacific Precision Tech Company Limited,MAT-0029,Steel Sheet spec 667,2999,Kg,46.694660,thb,2023-05-03,2023-06-23,2023-06-30,0.954
+PO708816,2,Summit Wire Company Limited,MAT-0040,Plastic Resin spec 211,914,kg,50.506602,THB,2024-07-04,2024-08-11,2024-08-15,0.943
+PO707858,1,Northern Plastics Company Limited,MAT-0056,Packaging spec 825,637,ea,0.709390,usd,2021-12-13,19/01/2022,19 Jan 2022,0.963
+PO707734,1,SUMMIT FORMING TECH COMPANY LIMITED,MAT-0020,Plastic Part spec 627,"13,869",ea,27.330237,thb,2022-09-02,12/10/2565,11/10/2022,0.964
+PO719084,3,"  Thai Components Co., Ltd. ",MAT-0026,Plastic Resin spec 917,5475,kgs,US$1.506102,US$,25 Sep 2023,20/11/2023,2023-11-17,0.972
+PO718258,2,"Summit Precision co.,ltd.",MAT-0050,Steel Sheet spec 708,933,Kg,43.232532,Baht,18/08/2023,16/10/2023,22/10/2023,0.92
+PO711471,2,  Prime Polymer Co Ltd ,mat-0029,Steel Sheet spec 667,3263,kgs,48.098278,Baht,26/11/2022,2023-01-07,2023-01-09,0.991
+PO707272,3,"central wire co., ltd.",MAT-0030,Steel Part spec 272,868,PCS,76.751562,THB,2023-05-06,2023-06-21,2023-06-21,0.896
+PO707530,3,"Northern Industrial CO.,LTD",MAT-0008,Steel Sheet spec 238,"7,371",KG,44.878604,฿,2 Mar 2022,20/04/2565,2022-04-17,0.909
+PO715720,1,"Bangkok Polymer CO.,LTD",MAT-0041,Plastic Part spec 540,8255,Pcs.,฿32.406014,฿,12 Feb 2024,2024-02-28,11/03/2024,0.972
+PO715194,1,"Asia Supply CO.,LTD",MAT-0016,Steel Part spec 452,15510,ea,91.240275,฿,2024-01-19,01/03/2024,2024-03-01,0.893
+PO708990,2,"Summit Precision Co., Ltd.",MAT-0001,Steel Sheet spec 896,,kgs,46.599524,฿,2024-04-10,6 Jun 2024,03/06/2567,0.949
+PO711813,1,"Bangkok Casting Co., Ltd.",mat-0037,Steel Part spec 495,"13,049",ea,3.787802,USD,2024-08-25,2024-10-23,2024-10-20,0.967
+PO716367,1,"  Pacific Polymer CO.,LTD ",MAT-0012,Plastic Resin spec 109,1220,Kg,55.302926,Baht,09/06/2021,11/07/2564,2021-07-10,0.925
+PO705279,2,"Prime Packaging co.,ltd.", MAT-0001 ,Steel Sheet spec 896,7585,kgs,45.024934,THB,2025-05-28,09/07/2568,,0.88
+PO715029,3,"Prime Plastics CO.,LTD",MAT-0040,Plastic Resin spec 211,0.309,ton,1556.184490,usd,24 Feb 2024,10 Apr 2024,09/04/2024,0.95
+PO709305,3,"Bangko kTech co.,ltd.",MAT-0030,Steel Part spec 272,1842,Pcs.,80.454404,฿,2025-06-01,4 Jul 2025,3 Jul 2025,0.999
+PO708318,2,Central Wire Steel Co Ltd,MAT-0052,Aluminium Part spec 866,1887,Pcs.,106.934476,Baht,21/07/2567,11/09/2024,2024-09-09,0.873
+PO717239,1,LOTUS PACKAGING,MAT-0011,Copper Wire spec 734,811,kg,354.818830,THB,2024-02-02,2024-02-21,18/02/2024,0.912
+PO700119,2,"Lotus Plastics Co., Ltd.",MAT-0040,Plastic Resin spec 211,978,KG,฿61.345796,฿,2021-08-14,2021-09-13,26/09/2021,0.986
+PO715580,2,"Summit Precision Co., Ltd.",MAT-0001,Steel Sheet spec 896,2814,kgs,47.955066,thb,16/11/2567,2024-12-07,22/12/2567,0.958
+PO706815,3,"Summit Forming Tech co.,ltd.",MAT-0005,Plastic Resin spec 352,188,kgs,60.329707,THB,2025-01-27,2025-03-15,2025-03-14,0.947
+PO704577,1,Mekong Plastics Company Limited,MAT-0042,Packaging spec 979,438,ea,1.454095,US$,25 May 2025,2025-07-02,01/07/2025,0.968
+PO705500,1,Mekong Casting Company Limited,MAT-0044,Steel Part spec 931,983,pcs,5.131499,EUR,2025-12-24,2026-02-06,2026-02-05,0.957
+PO717929,1,"DELTA TECH CO., LTD.",MAT-0049,Packaging spec 871,990,pcs,19.591785,THB,2025-12-22,2026-02-10,,0.995
+PO711333,1,Prime Precision Co Ltd,MAT-0015,Steel Sheet spec 990,9843,kg,44.323524,thb,2023-02-07,2023-03-16,2023-03-13,0.915
+PO710651,1,Central Wire Steel Company Limited,MAT-0052,Aluminium Part spec 866,259,EA,123.918730,฿,2021-02-14,19/03/2021,2021-03-26,0.916
+PO718913,1,bangkok alloy company limited,MAT-0056,Packaging spec 825,783,EA,0.548692,EUR,2022-10-07,2022-10-31,28/10/2565,0.939
+PO704981,3,"  Pacific Components Co., Ltd. ",MAT-0030,Steel Part spec 272,1721,PCS,2.011926,USD,18/10/2564,2021-11-18,18/11/2021,0.865
+PO708140,3,Royal Components Company Limited,MAT-0023,Steel Part spec 152,1782,EA,202.365986,Baht,20/12/2023,2 Feb 2024,30/01/2567,0.825
+PO714641,1,"Golden Casting CO.,LTD",MAT-0016,Steel Part spec 452,6139,ea,US$2.883849,US$,2024-03-07,2024-03-28,10/04/2567,0.86
+PO716339,3,Golden Wire,MAT-0002,Steel Part spec 567,9083,pcs,168.845459,thb,28/09/2022,2022-10-30,05/11/2022,0.955
+PO714916,2,"Asia Metal CO.,LTD",mat-0018,Copper Wire spec 262,389,kg,341.981789,THB,18 Jan 2024,13/03/2024,22/03/2024,0.851
+PO709095,2,"Union Industrial Co., Ltd.",MAT-0054,Plastic Resin spec 347,315,kgs,64.037066,thb,07/09/2021,24/09/2564,24 Sep 2021,0.988
+PO718052,2,"Golden Casting CO.,LTD",MAT-0037,Steel Part spec 495,17747,pcs,3.109063,USD,2021-05-12,2021-06-24,29 Jun 2021,0.833

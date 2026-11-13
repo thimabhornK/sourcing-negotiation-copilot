@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+# Generated data and models are reproducible with `make all`
+data/raw/
+data/curated/
+data/serving/
+data/quarantine/
+models/

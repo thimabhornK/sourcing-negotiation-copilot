@@ -1,0 +1,14 @@
+{
+  "train_rows": 47174,
+  "test_rows": 11710,
+  "test_period": "2025",
+  "mape_baseline_last_price": 0.0724,
+  "mape_model_a_cost_formula": 0.0445,
+  "mape_model_b_boosted_p50": 0.0477,
+  "band_coverage_p10_p90": 0.7555,
+  "flag_threshold": 0.12,
+  "test_quotes": 2695,
+  "test_quotes_overpriced": 399,
+  "flag_precision": 0.9388,
+  "flag_recall": 0.9223
+}

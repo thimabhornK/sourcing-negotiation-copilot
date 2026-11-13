@@ -1,0 +1,12 @@
+{
+  "rows_in": 61200,
+  "duplicates_removed": 1200,
+  "quarantined_unknown_vendor": 118,
+  "quarantined_missing_qty_or_price": 562,
+  "quarantined_negative_or_zero_qty": 282,
+  "quarantined_unparseable_date": 0,
+  "quarantined_unknown_unit_or_currency": 0,
+  "quarantined_price_outlier": 154,
+  "rows_out": 58884,
+  "rows_quarantined": 1116
+}

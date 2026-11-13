@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from copilot import config
+from copilot.datagen import contracts as contract_gen
 from copilot.datagen import mess
 
 INDICES = {
@@ -210,14 +211,17 @@ def generate(n_po: int = 60_000, n_rfq: int = 2_000, n_materials: int = 56, n_ve
         over = rng.random(k) < 0.15
         quoted = fair * np.where(over, 1 + rng.uniform(0.12, 0.35, k), rng.lognormal(0, 0.03, k))
         rfq_id = f"RFQ-{r + 1:05d}"
-        for v, p, o in zip(chosen.itertuples(), quoted, over, strict=True):
+        for v, p, o, f in zip(chosen.itertuples(), quoted, over, fair, strict=True):
             quotes.append({
                 "rfq_id": rfq_id, "vendor_id": v.vendor_id, "material_id": m.material_id,
                 "qty": q, "quoted_price_usd": round(float(p), 4), "quote_date": date.date(),
                 "lead_time_days": int(rng.integers(14, 60)),
                 "payment_terms": str(rng.choice(["NET30", "NET45", "NET60", "NET90"])),
             })
-            labels.append({"rfq_id": rfq_id, "vendor_id": v.vendor_id, "is_overpriced": bool(o)})
+            # fair_price_usd is the vendor's no-markup price. Only the evaluation and the
+            # vendor simulator may read it; the copilot itself never does.
+            labels.append({"rfq_id": rfq_id, "vendor_id": v.vendor_id, "is_overpriced": bool(o),
+                           "fair_price_usd": round(float(f), 4)})
         best = int(np.argmin(quoted))
         outcomes.append({
             "rfq_id": rfq_id, "material_id": m.material_id,
@@ -244,7 +248,9 @@ def generate(n_po: int = 60_000, n_rfq: int = 2_000, n_materials: int = 56, n_ve
     })
 
     public_vendors = vendors[[c for c in vendors.columns if not c.startswith("hidden_")]]
+    terms = contract_gen.make_terms(public_vendors, po, np.random.default_rng(seed + 2))
     return {"indices": indices, "materials": materials, "vendors": public_vendors,
+            "contract_terms": terms,
             "po_clean": po, "quotes": pd.DataFrame(quotes), "labels": pd.DataFrame(labels),
             "outcomes": pd.DataFrame(outcomes), "pcard": pcard}
 
@@ -261,6 +267,9 @@ def write_raw(tables: dict[str, pd.DataFrame], seed: int = config.SEED) -> None:
     tables["pcard"].to_csv(config.RAW / "pcard_transactions.csv", index=False)
     # Ground truth for evaluation only. A real customer would not have this file.
     tables["labels"].to_csv(config.RAW / "eval_quote_labels.csv", index=False)
+    tables["contract_terms"].to_csv(config.RAW / "eval_contract_terms.csv", index=False)
+    contract_gen.write_contracts(tables["contract_terms"], tables["vendors"],
+                                 config.RAW / "contracts")
     messy = mess.make_messy_po(tables["po_clean"], tables["indices"], rng)
     messy.to_csv(config.RAW / "erp_po_lines.csv", index=False)
 

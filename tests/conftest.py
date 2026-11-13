@@ -4,6 +4,9 @@ import pytest
 
 from copilot import config
 from copilot.datagen import generate as gen
+from copilot.model import should_cost
+from copilot.pipeline import clean
+from copilot.scoring import vendor_score
 
 
 @pytest.fixture(scope="session")
@@ -18,3 +21,12 @@ def world(tmp_path_factory):
     gen.write_raw(tables, seed=7)
     yield tables
     mp.undo()
+
+
+@pytest.fixture(scope="session")
+def trained(world):
+    """Run the whole pipeline once: clean, train, score."""
+    clean.run()
+    report = should_cost.run()
+    vendor_score.run()
+    return report

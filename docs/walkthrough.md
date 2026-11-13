@@ -163,6 +163,118 @@ with a separate `render` function for the text output. That separation is what
 lets the chat agents call it as a tool later: the agent gets structured data
 and never has to calculate a price itself.
 
+## 7. Contracts: search and extraction
+
+The generator writes one supply agreement per vendor to `data/raw/contracts/`
+(`datagen/contracts.py`). Terms are drawn first as structured data, which is
+kept as ground truth in `eval_contract_terms.csv`, and then written as text
+with varied wording and six clauses that have nothing to do with price.
+
+`contracts/search.py` splits each agreement into numbered clauses and indexes
+them with TF-IDF. A result always carries a citation such as
+`CT-0002 clause 6`. Buyers and contracts use different words ("cancel" and
+"terminate", "delayed" and "late"), so a small vocabulary table maps one to the
+other before indexing and before searching. The evaluation reports retrieval
+with and without that table.
+
+`contracts/extract.py` reads the clauses of one vendor and pulls out payment
+days, early-payment discount, rebate tiers, index linkage, late-delivery
+damages and notice period, each with its citation.
+
+**Things to try**
+
+- Ask "Do we get anything for paying faster?" and see which clause comes back.
+  Why does keyword search fail here, and what would fix it?
+- Add a new wording for the payment clause in `datagen/contracts.py`. Does
+  extraction still score 100% in `make eval`?
+
+## 8. Tools
+
+`src/copilot/tools.py` is the complete list of things an agent can do. Each
+tool is a function that returns a dictionary. Spend questions use fixed SQL
+with parameters (`$year`, `$category`), so the same question always returns
+the same figures and a model cannot write a query that scans or exposes data
+it should not.
+
+`rebate_status` joins two sources: annual spend from purchase orders and the
+rebate tiers extracted from the contract. It answers "has a rebate been
+earned" and "how far is the next tier", which is the contract right buyers
+most often leave unclaimed.
+
+## 9. Negotiation playbook
+
+`negotiation/playbook.py` builds the plan by rule:
+
+| Item | How it is set |
+| --- | --- |
+| Target | Should-cost, or a live competing quote if that is lower |
+| Opening ask | Below target by half the distance from should-cost to the bottom of the range |
+| Walk-away | The competing quote if there is one, otherwise the flag threshold above should-cost |
+| Arguments | Should-cost gap, index trend (with the price-adjustment clause when the contract has one), competing offer, rebate tier within reach, delivery record |
+| Trades | Early payment for the contractual discount, volume commitment for a price hold |
+
+When the quote is already at or below should-cost, the playbook asks for a
+small improvement only and moves the effort to terms.
+
+`draft_email` writes what goes to the vendor. It leaves out competitor names,
+competitor prices and the exact internal estimate.
+
+## 10. Vendor simulator
+
+`negotiation/simulator.py` plays the vendor. It has a hidden price limit and
+one of three personas (firm, flexible, volume-driven). Each round it concedes
+part of the remaining gap. It concedes more when the buyer brings evidence,
+and only when that evidence is true: saying "the index is falling" does
+nothing if the index went up.
+
+`run_auto` plays a whole negotiation with a scripted buyer, which is how the
+evaluation compares "ask for 5% off" with "follow the playbook" on the same
+quotes. The simulator's rules are assumptions. It is useful for rehearsal and
+for comparing strategies under equal conditions, and it says nothing certain
+about a real vendor.
+
+## 11. The agent team
+
+`agents/orchestrator.py` runs one chat turn:
+
+1. **Supervisor** extracts identifiers and numbers with regular expressions
+   (`router.py`) and chooses an intent. With a Gemini key the model chooses
+   the intent; otherwise rules do.
+2. **Specialists** (spend, vendor, contract and market analysts) call tools.
+3. **Strategist** builds the playbook when the request is a negotiation.
+4. **Writer** formats a draft from the tool results (`writer.py`). With a
+   Gemini key the model rewords the draft.
+5. **Reviewer** (`reviewer.py`) extracts every number from the answer and
+   looks for it in the tool results. If one is missing, the answer goes back
+   to the writer once, and after a second failure the template draft is used.
+
+`llm.py` is the only place that talks to a model. `OfflineLLM` and
+`GeminiLLM` share two methods, `route` and `write`, and every model call has a
+fallback. `adk_app.py` declares the same team with the Agent Development Kit.
+
+`tracing.py` records one span per step with latency, tokens and cost. Set
+`COPILOT_TRACE_FILE=traces/run.jsonl` to keep them.
+
+**Things to try**
+
+- Run `python -m copilot.chat --trace` and follow one question through the
+  agents.
+- In `tests/test_agents.py`, read `MakesUpANumber`. It is a writer that
+  invents a figure, and the two tests after it show what the reviewer does.
+
+## 12. Evaluating the agents
+
+`python -m copilot.eval.run` writes `reports/agent_eval.json`:
+
+| Section | Question it answers |
+| --- | --- |
+| `routing` | Do the rules pick the right intent on a hand-written set? Misses are listed |
+| `retrieval` | Is the right clause ranked first, for questions in buyer wording? |
+| `extraction` | Do extracted terms match the generator's ground truth? |
+| `reviewer` | If one figure in an answer is altered, is it caught? Are correct answers left alone? |
+| `negotiation_simulation` | How do the two strategies compare against the simulated vendor? |
+| `latency` | How long does a turn take without a model call? |
+
 ## Tests
 
 ```
@@ -175,6 +287,14 @@ make test
   sensitive value survives
 - `tests/test_model.py`: the model beats the baseline, the range is ordered,
   scores are in range, and the quote check gives the right verdicts
+- `tests/test_contracts.py`: clause splitting, search with citations,
+  extraction against ground truth, rebate arithmetic
+- `tests/test_negotiation.py`: playbook prices are ordered, the email does not
+  leak internal figures, the simulated vendor respects its limit and ignores
+  false evidence
+- `tests/test_agents.py`: parameter extraction, routing, the reviewer, every
+  chat mode end to end, the retry and fallback path, traces, and the ADK
+  definitions
 
 The tests build their own small dataset in a temporary folder, so they do not
 touch `data/`.

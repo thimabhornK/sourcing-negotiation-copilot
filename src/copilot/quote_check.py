@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from functools import lru_cache
 
 import pandas as pd
 
@@ -21,8 +22,15 @@ from copilot.features import build_features
 from copilot.model.should_cost import load_model
 
 
+@lru_cache(maxsize=16)
+def _cached(path: str, mtime: float) -> pd.DataFrame:
+    return pd.read_parquet(path)
+
+
 def _read(folder, name: str) -> pd.DataFrame:
-    return pd.read_parquet(folder / f"{name}.parquet")
+    """Read a table once and reuse it until the file changes."""
+    path = folder / f"{name}.parquet"
+    return _cached(str(path), path.stat().st_mtime)
 
 
 def check_quote(material_id: str, qty: float, price: float, currency: str = "USD",
@@ -82,7 +90,7 @@ def check_quote(material_id: str, qty: float, price: float, currency: str = "USD
     }
     score_path = config.SERVING / "vendor_score.parquet"
     if vendor_id and score_path.exists():
-        scores = pd.read_parquet(score_path).set_index("vendor_id")
+        scores = _read(config.SERVING, "vendor_score").set_index("vendor_id")
         if vendor_id in scores.index:
             s = scores.loc[vendor_id]
             result["vendor"] = {

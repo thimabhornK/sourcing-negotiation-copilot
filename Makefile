@@ -1,4 +1,4 @@
-.PHONY: install data clean-data train score all test lint check-quote
+.PHONY: install data clean-data train score all test lint check-quote chat app eval
 
 install:
 	pip install -e ".[dev]"
@@ -21,7 +21,16 @@ test:
 	python -m pytest -q
 
 lint:
-	ruff check src tests
+	ruff check src tests app adk
+
+chat:            ## Chat with the copilot in the terminal
+	python -m copilot.chat
+
+app:             ## Chat in the browser (needs: pip install -e ".[app]")
+	streamlit run app/streamlit_app.py
+
+eval:            ## Evaluate routing, retrieval, the reviewer and negotiation strategies
+	python -m copilot.eval.run
 
 check-quote:     ## Example: check one quote against should-cost
 	python -m copilot.quote_check --material MAT-0001 --qty 5000 --price 1.62 --currency USD --vendor V-0001 --date 2025-06-15

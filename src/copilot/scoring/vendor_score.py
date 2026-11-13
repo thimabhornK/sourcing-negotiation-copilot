@@ -18,10 +18,18 @@ WEIGHTS = {"w_delivery": 0.30, "w_quality": 0.25, "w_price": 0.25, "w_risk": 0.2
 SQL_PATH = config.ROOT / "sql" / "vendor_score.sql"
 
 
-def score_vendors(po: pd.DataFrame, vendors: pd.DataFrame, materials: pd.DataFrame,
-                  indices: pd.DataFrame, weights: dict[str, float] | None = None) -> pd.DataFrame:
+def add_should_cost(po: pd.DataFrame, materials: pd.DataFrame, indices: pd.DataFrame
+                    ) -> pd.DataFrame:
+    """Attach the should-cost estimate to every purchase line."""
     X = build_features(po, materials, indices, "po_date")
-    po_scored = po.assign(should_cost_p50=load_model().predict(X)["p50"].to_numpy())
+    return po.assign(should_cost_p50=load_model().predict(X)["p50"].to_numpy())
+
+
+def score_vendors(po: pd.DataFrame, vendors: pd.DataFrame, materials: pd.DataFrame,
+                  indices: pd.DataFrame, weights: dict[str, float] | None = None,
+                  po_scored: pd.DataFrame | None = None) -> pd.DataFrame:
+    if po_scored is None:
+        po_scored = add_should_cost(po, materials, indices)
     con = duckdb.connect()
     con.register("po_scored", po_scored)
     con.register("vendors", vendors)
@@ -30,9 +38,11 @@ def score_vendors(po: pd.DataFrame, vendors: pd.DataFrame, materials: pd.DataFra
 
 def run() -> pd.DataFrame:
     read = lambda name: pd.read_parquet(config.CURATED / f"{name}.parquet")  # noqa: E731
-    scores = score_vendors(read("po_lines"), read("vendors"), read("materials"),
-                           read("market_indices"))
+    materials, indices = read("materials"), read("market_indices")
+    po_scored = add_should_cost(read("po_lines"), materials, indices)
+    scores = score_vendors(po_scored, read("vendors"), materials, indices, po_scored=po_scored)
     config.SERVING.mkdir(parents=True, exist_ok=True)
+    po_scored.to_parquet(config.SERVING / "po_scored.parquet", index=False)
     scores.to_parquet(config.SERVING / "vendor_score.parquet", index=False)
     return scores
 

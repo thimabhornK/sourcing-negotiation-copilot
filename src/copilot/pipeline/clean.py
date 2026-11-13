@@ -16,6 +16,7 @@ import re
 import pandas as pd
 
 from copilot import config
+from copilot.contracts.search import build_chunks
 from copilot.pipeline import deidentify
 
 LEGAL_WORDS = {"co", "ltd", "company", "limited", "inc", "corp", "plc"}
@@ -153,6 +154,10 @@ def run() -> dict:
         config.CURATED / "rfq_quotes.parquet", index=False)
     pd.read_csv(config.RAW / "negotiation_outcomes.csv").to_parquet(
         config.CURATED / "negotiation_outcomes.parquet", index=False)
+
+    chunks = build_chunks(config.RAW / "contracts")
+    chunks.to_parquet(config.CURATED / "contract_chunks.parquet", index=False)
+    report["contract_clauses_indexed"] = len(chunks)
 
     (config.REPORTS / "data_quality.json").write_text(json.dumps(report, indent=2))
     return report

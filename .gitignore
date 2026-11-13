@@ -10,3 +10,4 @@ data/curated/
 data/serving/
 data/quarantine/
 models/
+traces/

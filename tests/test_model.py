@@ -3,17 +3,7 @@ import pytest
 
 from copilot import config
 from copilot.model import should_cost
-from copilot.pipeline import clean
 from copilot.quote_check import check_quote
-from copilot.scoring import vendor_score
-
-
-@pytest.fixture(scope="module")
-def trained(world):
-    clean.run()
-    report = should_cost.run()
-    vendor_score.run()
-    return report
 
 
 def test_model_beats_the_last_price_rule_of_thumb(trained):

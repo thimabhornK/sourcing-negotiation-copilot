@@ -8,5 +8,6 @@
   "quarantined_unknown_unit_or_currency": 0,
   "quarantined_price_outlier": 154,
   "rows_out": 58884,
-  "rows_quarantined": 1116
+  "rows_quarantined": 1116,
+  "contract_clauses_indexed": 960
 }

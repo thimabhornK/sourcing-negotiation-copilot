@@ -1,0 +1,84 @@
+{
+  "routing": {
+    "cases": 42,
+    "accuracy": 0.9524,
+    "misrouted": [
+      {
+        "message": "Is the price with V-0007 linked to an index?",
+        "expected": "contract_question",
+        "got": "vendor_profile"
+      },
+      {
+        "message": "What should MAT-0020 cost for 3000 pcs if they ask 7.5?",
+        "expected": "check_quote",
+        "got": "help"
+      }
+    ]
+  },
+  "retrieval": {
+    "questions": 480,
+    "plain_tfidf": {
+      "hit_at_1": 0.4958,
+      "hit_at_3": 0.6625
+    },
+    "with_vocabulary": {
+      "hit_at_1": 0.8812,
+      "hit_at_3": 0.8812
+    }
+  },
+  "extraction": {
+    "contracts": 80,
+    "fields_checked": 480,
+    "field_accuracy": 1.0
+  },
+  "reviewer": {
+    "answers": 100,
+    "false_alarm_rate": 0.0,
+    "corrupted_answers": 100,
+    "catch_rate": 0.93
+  },
+  "negotiation_simulation": {
+    "note": "Simulated vendor with fixed rules that concedes more when given true evidence. This compares strategies under identical conditions. It is not a forecast of savings with real vendors.",
+    "overpriced_quotes": {
+      "quotes": 200,
+      "avg_saving_pct": {
+        "ask_5pct": 4.99,
+        "playbook": 18.66
+      },
+      "avg_gap_to_vendor_normal_price_pct": 19.18,
+      "avg_rounds": {
+        "ask_5pct": 2.65,
+        "playbook": 3.68
+      },
+      "playbook_better_share": 1.0,
+      "playbook_worse_share": 0.0
+    },
+    "fair_quotes": {
+      "quotes": 200,
+      "avg_saving_pct": {
+        "ask_5pct": 1.37,
+        "playbook": 2.35
+      },
+      "avg_gap_to_vendor_normal_price_pct": 1.48,
+      "avg_rounds": {
+        "ask_5pct": 4.93,
+        "playbook": 4.0
+      },
+      "playbook_better_share": 0.9,
+      "playbook_worse_share": 0.1
+    }
+  },
+  "latency": {
+    "note": "Offline path: tools and rules only, no language-model call.",
+    "ms_by_intent": {
+      "top_vendors": 54.2,
+      "vendor_profile": 110.4,
+      "contract_question": 5.5,
+      "rebate_status": 50.6,
+      "check_quote": 76.2,
+      "negotiate": 125.6,
+      "simulate_auto": 161.6
+    },
+    "median_ms": 76.2
+  }
+}

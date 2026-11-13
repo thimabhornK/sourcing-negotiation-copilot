@@ -78,7 +78,8 @@ The chat has three modes:
 
 ![Chat in the browser](docs/images/chat.png)
 
-The Google Cloud deployment is the next stage. See [Roadmap](#roadmap).
+The first part of the Google Cloud deployment, BigQuery and Gemini, is described in
+[Running on Google Cloud](#running-on-google-cloud). The rest is on the [Roadmap](#roadmap).
 
 ## Results so far
 

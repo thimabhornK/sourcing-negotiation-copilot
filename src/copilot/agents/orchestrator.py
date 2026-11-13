@@ -38,6 +38,7 @@ class Reply:
     trace: list = field(default_factory=list)
     review: dict = field(default_factory=dict)
     usage: dict = field(default_factory=dict)
+    draft: str = ""  # the template answer, before any rewording by a model
 
 
 class Session:
@@ -74,7 +75,7 @@ class Session:
 
         text, verdict = self._write_and_review(message, draft, facts, intent)
         return Reply(text=text, intent=intent, mode=MODES.get(intent, "Ask"), facts=facts,
-                     trace=list(t.spans), review=verdict, usage=t.summary())
+                     trace=list(t.spans), review=verdict, usage=t.summary(), draft=draft)
 
     def _remember(self, params: dict) -> None:
         if params.get("vendor_id"):

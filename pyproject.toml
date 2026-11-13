@@ -19,7 +19,8 @@ dependencies = [
 [project.optional-dependencies]
 agents = ["google-genai>=1.0", "google-adk>=1.0"]
 app = ["streamlit>=1.40"]
-dev = ["pytest>=8", "ruff>=0.5"]
+cloud = ["google-cloud-bigquery>=3.20", "db-dtypes>=1.2"]
+dev = ["pytest>=8", "ruff>=0.5", "sqlglot>=25"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

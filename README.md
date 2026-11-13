@@ -153,10 +153,16 @@ playbook sizes its ask to the real gap: it recovers most of a markup that a
 flat 5% request leaves in place, and does not over-ask on a fair quote. It is
 not a forecast of savings with real vendors.
 
-**Not yet measured.** The Gemini path (routing and wording by a language
-model) and the Agent Development Kit definitions are implemented and their
-fallbacks are tested, but they have not been run against a live model, so
-there are no token, cost or answer-quality figures for them yet.
+**Not yet measured.** Two parts need credentials and have not been run yet,
+so there are no figures for them here:
+
+- The Gemini path (routing and wording by a language model). `make eval-live`
+  measures it and writes `reports/agent_eval_live.json`.
+- The BigQuery serving layer. `make bq-parity` runs it and writes
+  `reports/bigquery_parity.json`.
+
+Both are implemented, their SQL and fallbacks are covered by tests, and the
+steps to run them are in [Running on Google Cloud](#running-on-google-cloud).
 
 ## Quickstart
 
@@ -225,6 +231,51 @@ and one generated contract is in
 [`data/sample/contract_sample.md`](data/sample/contract_sample.md)
 if you want to see them before running anything.
 
+## Running on Google Cloud
+
+Neither step needs a billing account. The BigQuery sandbox and the Gemini API
+free tier are enough for this dataset.
+
+**BigQuery.** The scorecard and the spend queries have a BigQuery version in
+[`sql/bigquery`](sql/bigquery).
+
+```bash
+pip install -e ".[cloud]"
+gcloud auth application-default login
+export COPILOT_BQ_PROJECT=your-project-id
+
+make bq-load      # upload five tables with load jobs
+make bq-parity    # run each query on BigQuery and on DuckDB, and compare the results
+```
+
+`make bq-parity` reports, per query, whether both engines return the same rows
+in the same order, the largest numeric difference, the bytes scanned and the
+time taken. To make the chat use BigQuery for spend questions:
+
+```bash
+COPILOT_BACKEND=bigquery make chat
+```
+
+The sandbox has no DML and its tables expire after 60 days, so the loader
+replaces whole tables and `make bq-load` can simply be run again.
+
+**Gemini.**
+
+```bash
+pip install -e ".[agents]"
+export GEMINI_API_KEY=your-key
+make eval-live    # about 10 minutes on a free key; add --limit to shorten
+```
+
+This compares the model router with the rules on the same 42 messages, then
+runs 16 conversation turns and records how often the model's wording passed
+the number check first time, needed a retry or was replaced by the template
+answer, whether contract citations and price verdicts survived the rewording,
+and the tokens, cost and latency per turn.
+
+On the free tier Google may use prompts to improve its products. That is
+acceptable for this synthetic dataset and not for real spend data.
+
 ## How it works
 
 ```mermaid
@@ -285,6 +336,10 @@ Design choices worth knowing:
   estimate because it keeps following the market index outside the range seen
   in training, which tree models cannot do. The boosted model supplies the
   width of the range.
+- **One query, two engines, checked against each other.** DuckDB runs the
+  queries locally and in the tests; BigQuery runs them in the cloud. The
+  parity check exists because the two dialects differ in ways that change
+  results quietly, such as how a median is computed.
 - **Numbers come from code, not from a language model.** The quote check is
   deterministic, so the same quote always gets the same answer.
 
@@ -302,11 +357,12 @@ src/copilot/contracts/  Clause search and term extraction
 src/copilot/tools.py    The functions agents are allowed to call
 src/copilot/negotiation/ Playbook and vendor simulator
 src/copilot/agents/     Supervisor, writer, reviewer, tracing, model boundary, ADK definitions
-src/copilot/eval/       Agent evaluation
+src/copilot/eval/       Agent evaluation, offline (run.py) and with a live model (live.py)
+src/copilot/cloud/      BigQuery loader, query runner and parity check
 src/copilot/chat.py     Terminal chat
 app/                    Browser chat (Streamlit)
 adk/                    Entry point for the ADK developer UI
-sql/                    SQL used by the scorecard
+sql/                    Scorecard SQL for DuckDB; sql/bigquery holds the BigQuery versions
 tests/                  Unit and end-to-end tests
 reports/                Output of the latest full run
 data/sample/            Small sample of the raw input
@@ -333,7 +389,9 @@ Check your company's data policy before loading real spend data.
 - [x] Contract retrieval with clause citations and term extraction
 - [x] Multi-agent chat: Ask, Check a quote, Negotiate (playbook, draft email, vendor simulator)
 - [x] Evaluation harness for the agents and per-step tracing
-- [ ] Live-model evaluation: answer quality, tokens and cost per request with Gemini
+- [x] BigQuery serving layer with a parity check against the local engine
+- [x] Live-model evaluation harness: routing, answer checks, tokens, cost and latency with Gemini
+- [ ] Publish the measured BigQuery and Gemini results
 - [ ] Google Cloud deployment: BigQuery and BigLake lakehouse, PySpark on Dataproc Serverless, Sensitive Data Protection, Spanner, Vertex AI, Agent Development Kit
 
 ## Limitations

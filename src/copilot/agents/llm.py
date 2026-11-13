@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 
 from copilot.agents.router import INTENTS, route_by_rules
 
@@ -61,6 +62,7 @@ class GeminiLLM:
         # to the current list price of the model you use.
         self.price_in = float(os.environ.get("COPILOT_PRICE_IN_PER_M", "0.30"))
         self.price_out = float(os.environ.get("COPILOT_PRICE_OUT_PER_M", "2.50"))
+        self.retry_wait_s = float(os.environ.get("COPILOT_RETRY_WAIT_S", "30"))
 
     def _generate(self, system: str, user: str, span: dict, as_json: bool = False) -> str:
         from google.genai import types
@@ -68,8 +70,18 @@ class GeminiLLM:
         config = types.GenerateContentConfig(
             system_instruction=system, temperature=0.2,
             response_mime_type="application/json" if as_json else "text/plain")
-        response = self.client.models.generate_content(model=self.name, contents=user,
-                                                       config=config)
+        response = None
+        for attempt in range(3):  # free-tier keys are rate limited: wait and try again
+            try:
+                response = self.client.models.generate_content(model=self.name, contents=user,
+                                                               config=config)
+                break
+            except Exception as exc:
+                limited = "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc)
+                if not limited or attempt == 2:
+                    raise
+                span["rate_limit_waits"] = attempt + 1
+                time.sleep(self.retry_wait_s)
         usage = response.usage_metadata
         tokens_in = getattr(usage, "prompt_token_count", 0) or 0
         tokens_out = getattr(usage, "candidates_token_count", 0) or 0

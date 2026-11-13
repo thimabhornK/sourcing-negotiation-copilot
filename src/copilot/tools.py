@@ -9,6 +9,7 @@ repeatable and stops a model from scanning or exposing data it should not.
 from __future__ import annotations
 
 import copy
+import os
 from functools import lru_cache
 
 import duckdb
@@ -31,6 +32,16 @@ def _query(sql: str, params: dict | None = None) -> pd.DataFrame:
     return con.execute(sql, params or {}).df()
 
 
+def _spend(name: str, sql: str, params: dict) -> pd.DataFrame:
+    """Run a spend query locally on DuckDB, or on BigQuery when COPILOT_BACKEND=bigquery.
+    The BigQuery text of each query is in sql/bigquery/<name>.sql."""
+    if os.environ.get("COPILOT_BACKEND", "local") == "bigquery":
+        from copilot.cloud import bigquery
+
+        return bigquery.query(name, params)[0]
+    return _query(sql, params)
+
+
 def _records(df: pd.DataFrame) -> list[dict]:
     return df.round(4).to_dict("records")
 
@@ -45,13 +56,13 @@ def latest_date() -> str:
 def top_vendors_by_spend(year: int | None = None, category: str | None = None, n: int = 5
                          ) -> dict:
     """Vendors ranked by total spend, optionally for one year or material category."""
-    rows = _query("""
+    rows = _spend("top_vendors_by_spend", """
         SELECT p.vendor_id, v.vendor_name, ROUND(SUM(p.qty * p.unit_price_usd), 0) AS spend_usd,
                COUNT(*) AS po_lines
         FROM po p JOIN vendors v USING (vendor_id) JOIN materials m USING (material_id)
         WHERE ($year IS NULL OR YEAR(p.po_date) = $year)
           AND ($category IS NULL OR m.category = $category)
-        GROUP BY 1, 2 ORDER BY spend_usd DESC LIMIT $n""",
+        GROUP BY 1, 2 ORDER BY spend_usd DESC, 1 LIMIT $n""",
                   {"year": year, "category": category, "n": n})
     return {"tool": "top_vendors_by_spend", "year": year, "category": category,
             "rows": _records(rows)}
@@ -60,7 +71,7 @@ def top_vendors_by_spend(year: int | None = None, category: str | None = None, n
 def most_expensive_vendors(year: int | None = None, category: str | None = None,
                            material_id: str | None = None, n: int = 5) -> dict:
     """Vendors ranked by how far their prices sit above should-cost."""
-    rows = _query("""
+    rows = _spend("most_expensive_vendors", """
         SELECT p.vendor_id, v.vendor_name,
                ROUND(100 * (MEDIAN(p.unit_price_usd / p.should_cost_p50) - 1), 1)
                  AS pct_above_should_cost,
@@ -71,7 +82,7 @@ def most_expensive_vendors(year: int | None = None, category: str | None = None,
           AND ($category IS NULL OR m.category = $category)
           AND ($material IS NULL OR p.material_id = $material)
         GROUP BY 1, 2 HAVING COUNT(*) >= 5
-        ORDER BY pct_above_should_cost DESC LIMIT $n""",
+        ORDER BY pct_above_should_cost DESC, 1 LIMIT $n""",
                   {"year": year, "category": category, "material": material_id, "n": n})
     return {"tool": "most_expensive_vendors", "year": year, "category": category,
             "material_id": material_id, "rows": _records(rows)}
@@ -79,7 +90,7 @@ def most_expensive_vendors(year: int | None = None, category: str | None = None,
 
 def late_vendors(year: int | None = None, n: int = 5) -> dict:
     """Vendors ranked by the share of delivered lines that arrived after the promised date."""
-    rows = _query("""
+    rows = _spend("late_vendors", """
         SELECT p.vendor_id, v.vendor_name,
                ROUND(100 * AVG(CASE WHEN p.received_date > p.promised_date THEN 1.0 ELSE 0 END), 1)
                  AS late_pct,
@@ -87,18 +98,18 @@ def late_vendors(year: int | None = None, n: int = 5) -> dict:
         FROM po p JOIN vendors v USING (vendor_id)
         WHERE p.received_date IS NOT NULL AND ($year IS NULL OR YEAR(p.po_date) = $year)
         GROUP BY 1, 2 HAVING COUNT(*) >= 20
-        ORDER BY late_pct DESC LIMIT $n""", {"year": year, "n": n})
+        ORDER BY late_pct DESC, 1 LIMIT $n""", {"year": year, "n": n})
     return {"tool": "late_vendors", "year": year, "rows": _records(rows)}
 
 
 def spend_by_category(year: int | None = None) -> dict:
     """Total spend and number of vendors per material category."""
-    rows = _query("""
+    rows = _spend("spend_by_category", """
         SELECT m.category, ROUND(SUM(p.qty * p.unit_price_usd), 0) AS spend_usd,
                COUNT(DISTINCT p.vendor_id) AS vendors
         FROM po p JOIN materials m USING (material_id)
         WHERE ($year IS NULL OR YEAR(p.po_date) = $year)
-        GROUP BY 1 ORDER BY spend_usd DESC""", {"year": year})
+        GROUP BY 1 ORDER BY spend_usd DESC, 1""", {"year": year})
     return {"tool": "spend_by_category", "year": year, "rows": _records(rows)}
 
 

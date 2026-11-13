@@ -40,4 +40,4 @@ SELECT
   ROUND($w_delivery * delivery_score + $w_quality * quality_score
         + $w_price * price_score + $w_risk * risk_score, 1) AS total_score
 FROM scored
-ORDER BY total_score DESC;
+ORDER BY total_score DESC, vendor_id;

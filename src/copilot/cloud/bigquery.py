@@ -77,7 +77,7 @@ def query(name: str, params: dict) -> tuple[pd.DataFrame, dict]:
     start = time.perf_counter()
     sql = render_sql(name, f"{s['project']}.{s['dataset']}", params.get("n", 5))
     job = client().query(sql, job_config=job_config)
-    rows = job.result().to_dataframe()
+    rows = job.result().to_dataframe(create_bqstorage_client=False)  # small results: REST is enough
     stats = {"wall_ms": round(1000 * (time.perf_counter() - start), 0),
              "bytes_processed": int(job.total_bytes_processed or 0),
              "slot_ms": int(job.slot_millis or 0)}

@@ -62,6 +62,8 @@ def progress(label: str, started: float, span: dict) -> None:
     notes = []
     if span.get("rate_limit_waits"):
         notes.append(f"waited for rate limit x{span['rate_limit_waits']}")
+    if span.get("timeouts"):
+        notes.append(f"request timed out x{span['timeouts']}, retried")
     if span.get("fallback"):
         notes.append("model call failed, used rules")
     print(f"  {label:<16} {time.perf_counter() - started:5.1f}s  {'; '.join(notes)}",
@@ -103,6 +105,7 @@ def eval_answers(llm, pause: float, limit: int | None) -> dict:
             started = time.perf_counter()
             reply = session.handle(message)
             waits = {"rate_limit_waits": sum(s.get("rate_limit_waits", 0) for s in reply.trace),
+                     "timeouts": sum(s.get("timeouts", 0) for s in reply.trace),
                      **({"fallback": "yes"} if any("fallback" in s for s in reply.trace) else {})}
             progress(f"answer  {len(turns) + 1}/{limit or TOTAL_TURNS}", started, waits)
             writes = [s for s in reply.trace if s["agent"] == "writer"]

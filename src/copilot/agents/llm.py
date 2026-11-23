@@ -78,10 +78,14 @@ class GeminiLLM:
 
     def __init__(self, model: str | None = None, api_key: str | None = None) -> None:
         from google import genai  # imported here so the offline path has no dependency
+        from google.genai import types
 
         self.name = model or os.environ.get("COPILOT_GEMINI_MODEL", DEFAULT_MODEL)
         self.client = genai.Client(
-            api_key=api_key or os.environ.get("GEMINI_API_KEY") or os.environ["GOOGLE_API_KEY"])
+            api_key=api_key or os.environ.get("GEMINI_API_KEY") or os.environ["GOOGLE_API_KEY"],
+            # Without a timeout one stuck request can hold a run for minutes.
+            http_options=types.HttpOptions(
+                timeout=int(float(os.environ.get("COPILOT_TIMEOUT_S", "60")) * 1000)))
         listed_in, listed_out = PRICES.get(self.name, (0.0, 0.0))
         self.price_in = float(os.environ.get("COPILOT_PRICE_IN_PER_M", listed_in))
         self.price_out = float(os.environ.get("COPILOT_PRICE_OUT_PER_M", listed_out))
@@ -95,15 +99,20 @@ class GeminiLLM:
             system_instruction=system, temperature=0.2,
             response_mime_type="application/json" if as_json else "text/plain")
         response = None
-        for attempt in range(3):  # free-tier keys are rate limited: wait and try again
+        for attempt in range(3):  # free-tier keys are rate limited or slow: wait and try again
             try:
                 response = self.client.models.generate_content(model=self.name, contents=user,
                                                                config=config)
                 break
             except Exception as exc:
-                limited = "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc)
-                if not limited or attempt == 2:
+                text = f"{type(exc).__name__} {exc}".lower()
+                limited = "429" in text or "resource_exhausted" in text
+                timed_out = "timeout" in text or "timed out" in text
+                if not (limited or timed_out) or attempt == 2:
                     raise
+                if timed_out:
+                    span["timeouts"] = attempt + 1
+                    continue  # a slow request is retried at once
                 span["rate_limit_waits"] = attempt + 1
                 time.sleep(self.retry_wait_s)
         usage = response.usage_metadata

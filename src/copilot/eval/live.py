@@ -20,7 +20,7 @@ import statistics
 import time
 
 from copilot import config
-from copilot.agents.llm import GeminiLLM
+from copilot.agents.llm import GeminiLLM, describe_error
 from copilot.agents.orchestrator import Session
 from copilot.agents.router import extract_params, route_by_rules
 from copilot.eval.cases import ROUTING
@@ -57,11 +57,13 @@ def _share(turns: list[dict], applies: str, kept: str) -> dict:
 def eval_routing(llm, pause: float, limit: int | None) -> dict:
     cases = ROUTING[:limit] if limit else ROUTING
     model_right = rules_right = fallbacks = 0
-    misrouted = []
+    misrouted, errors = [], []
     for message, want in cases:
         params, span = extract_params(message), {}
         got = llm.route(message, params, span)
         fallbacks += "fallback" in span
+        if "fallback" in span and span["fallback"] not in errors:
+            errors.append(span["fallback"])
         model_right += got == want
         rules_right += route_by_rules(message, params) == want
         if got != want:
@@ -69,7 +71,8 @@ def eval_routing(llm, pause: float, limit: int | None) -> dict:
         time.sleep(pause)
     return {"cases": len(cases), "model_accuracy": round(model_right / len(cases), 4),
             "rules_accuracy": round(rules_right / len(cases), 4),
-            "model_calls_that_fell_back_to_rules": fallbacks, "misrouted_by_model": misrouted}
+            "model_calls_that_fell_back_to_rules": fallbacks, "model_errors": errors[:5],
+            "misrouted_by_model": misrouted}
 
 
 def eval_answers(llm, pause: float, limit: int | None) -> dict:
@@ -121,8 +124,22 @@ def eval_answers(llm, pause: float, limit: int | None) -> dict:
     }
 
 
+def check_model(llm) -> None:
+    """Make one small call first. Without this, a bad key or an unavailable model
+    would make every call fall back to the rules, and the report would quietly
+    describe the rules instead of the model."""
+    if not hasattr(llm, "_generate"):
+        return
+    try:
+        llm._generate("Reply with the single word OK.", "ping", {})
+    except Exception as exc:
+        raise SystemExit(f"Could not reach model {llm.name}.\n  {describe_error(exc)}\n"
+                         "Check GEMINI_API_KEY and COPILOT_GEMINI_MODEL, then try again.") from None
+
+
 def run(llm=None, pause: float = 6.0, limit: int | None = None) -> dict:
     llm = llm or GeminiLLM()
+    check_model(llm)
     report = {"model": llm.name, "date": dt.date.today().isoformat(),
               "note": "Cost uses the list prices set in COPILOT_PRICE_IN_PER_M and "
                       "COPILOT_PRICE_OUT_PER_M. A free-tier key is not charged.",

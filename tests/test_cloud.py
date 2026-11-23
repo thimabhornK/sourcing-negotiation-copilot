@@ -62,3 +62,19 @@ def test_live_evaluation_harness_runs_with_any_model(trained):
     assert answers["turns"] == 6 and answers["passed_number_review_first_time"] == 1.0
     assert answers["tokens_per_turn"] == {"in": 120, "out": 40}
     assert answers["cost_per_1000_turns_usd"] == 0.2
+
+
+def test_model_errors_are_described_without_the_key():
+    from copilot.agents.llm import describe_error
+
+    text = describe_error(ValueError("400 API key not valid: AIzaSyA1234567890abcdefghijklmn"))
+    assert text.startswith("ValueError: 400 API key not valid") and "AIza" not in text
+
+
+def test_live_evaluation_stops_when_the_model_cannot_be_reached():
+    class Broken(CountsTokens):
+        def _generate(self, system, user, span, as_json=False):
+            raise PermissionError("403 PERMISSION_DENIED")
+
+    with pytest.raises(SystemExit, match="403 PERMISSION_DENIED"):
+        live.run(Broken(), pause=0, limit=1)

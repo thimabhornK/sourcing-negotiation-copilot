@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 
 from copilot.agents.router import INTENTS, route_by_rules
@@ -36,6 +37,15 @@ Rules:
 - Keep the verdict and the recommended prices unchanged.
 - Plain text, no Markdown tables.
 {feedback}"""
+
+
+KEY_PATTERN = re.compile(r"AIza[0-9A-Za-z_\-]{20,}")
+
+
+def describe_error(exc: Exception) -> str:
+    """A short, key-free description of a failed model call, kept in the trace."""
+    text = KEY_PATTERN.sub("[api key removed]", " ".join(str(exc).split()))
+    return f"{type(exc).__name__}: {text[:300]}"
 
 
 class OfflineLLM:
@@ -98,7 +108,7 @@ class GeminiLLM:
                                  as_json=True)
             intent = json.loads(raw).get("intent")
         except Exception as exc:  # network, quota or malformed JSON: fall back to rules
-            span["fallback"] = f"{type(exc).__name__}"
+            span["fallback"] = describe_error(exc)
             return fallback
         if intent not in INTENTS:
             span["fallback"] = "unknown_intent"
@@ -113,7 +123,7 @@ class GeminiLLM:
         try:
             return self._generate(WRITER_PROMPT.format(feedback=note), user, span) or draft
         except Exception as exc:
-            span["fallback"] = f"{type(exc).__name__}"
+            span["fallback"] = describe_error(exc)
             return draft
 
 

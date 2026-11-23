@@ -210,7 +210,7 @@ route messages and word the answers:
 ```bash
 pip install -e ".[agents]"
 export GEMINI_API_KEY=your-key
-export COPILOT_GEMINI_MODEL=gemini-2.5-flash   # optional
+export COPILOT_GEMINI_MODEL=gemini-3.5-flash   # optional, this is the default
 make chat
 ```
 

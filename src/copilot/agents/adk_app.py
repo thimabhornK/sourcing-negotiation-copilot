@@ -19,9 +19,10 @@ import os
 from google.adk.agents import Agent
 
 from copilot import tools
+from copilot.agents.llm import DEFAULT_MODEL
 from copilot.negotiation.playbook import build_playbook
 
-MODEL = os.environ.get("COPILOT_GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("COPILOT_GEMINI_MODEL", DEFAULT_MODEL)
 GROUNDING = ("Use only figures returned by your tools. Never calculate or estimate a number "
              "yourself. Quote contract citations exactly as the tools return them.")
 

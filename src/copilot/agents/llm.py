@@ -59,19 +59,33 @@ class OfflineLLM:
         return draft
 
 
+DEFAULT_MODEL = "gemini-3.5-flash"
+# Paid-tier list prices in USD per million tokens (input, output), from the Gemini
+# API pricing page on 2026-11-13. Used only for the cost shown in traces; a
+# free-tier key is not charged. Override with COPILOT_PRICE_IN_PER_M and
+# COPILOT_PRICE_OUT_PER_M for a model that is not listed or after a price change.
+PRICES = {
+    "gemini-3.5-flash": (1.50, 9.00),
+    "gemini-3.1-flash-lite": (0.25, 1.50),
+    "gemini-3-flash-preview": (0.50, 3.00),
+    "gemini-2.5-flash": (0.30, 2.50),
+    "gemini-2.5-flash-lite": (0.10, 0.40),
+}
+
+
 class GeminiLLM:
     """Gemini for routing and wording. Tools still produce every number."""
 
     def __init__(self, model: str | None = None, api_key: str | None = None) -> None:
         from google import genai  # imported here so the offline path has no dependency
 
-        self.name = model or os.environ.get("COPILOT_GEMINI_MODEL", "gemini-2.5-flash")
+        self.name = model or os.environ.get("COPILOT_GEMINI_MODEL", DEFAULT_MODEL)
         self.client = genai.Client(
             api_key=api_key or os.environ.get("GEMINI_API_KEY") or os.environ["GOOGLE_API_KEY"])
-        # USD per million tokens, used only for the cost shown in traces. Set these
-        # to the current list price of the model you use.
-        self.price_in = float(os.environ.get("COPILOT_PRICE_IN_PER_M", "0.30"))
-        self.price_out = float(os.environ.get("COPILOT_PRICE_OUT_PER_M", "2.50"))
+        listed_in, listed_out = PRICES.get(self.name, (0.0, 0.0))
+        self.price_in = float(os.environ.get("COPILOT_PRICE_IN_PER_M", listed_in))
+        self.price_out = float(os.environ.get("COPILOT_PRICE_OUT_PER_M", listed_out))
+        self.price_known = self.name in PRICES or "COPILOT_PRICE_IN_PER_M" in os.environ
         self.retry_wait_s = float(os.environ.get("COPILOT_RETRY_WAIT_S", "30"))
 
     def _generate(self, system: str, user: str, span: dict, as_json: bool = False) -> str:
@@ -94,8 +108,11 @@ class GeminiLLM:
                 time.sleep(self.retry_wait_s)
         usage = response.usage_metadata
         tokens_in = getattr(usage, "prompt_token_count", 0) or 0
-        tokens_out = getattr(usage, "candidates_token_count", 0) or 0
+        # Newer models "think" before answering. Thinking tokens are billed as output.
+        thinking = getattr(usage, "thoughts_token_count", 0) or 0
+        tokens_out = (getattr(usage, "candidates_token_count", 0) or 0) + thinking
         span.update(model=self.name, tokens_in=tokens_in, tokens_out=tokens_out,
+                    thinking_tokens=thinking,
                     cost_usd=round((tokens_in * self.price_in + tokens_out * self.price_out)
                                    / 1e6, 6))
         return response.text or ""

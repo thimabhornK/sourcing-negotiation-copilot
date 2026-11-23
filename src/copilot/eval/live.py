@@ -141,8 +141,11 @@ def run(llm=None, pause: float = 6.0, limit: int | None = None) -> dict:
     llm = llm or GeminiLLM()
     check_model(llm)
     report = {"model": llm.name, "date": dt.date.today().isoformat(),
-              "note": "Cost uses the list prices set in COPILOT_PRICE_IN_PER_M and "
-                      "COPILOT_PRICE_OUT_PER_M. A free-tier key is not charged.",
+              "price_per_million_tokens_usd": {"input": getattr(llm, "price_in", None),
+                                               "output": getattr(llm, "price_out", None)},
+              "note": "Cost is computed from paid-tier list prices (see PRICES in "
+                      "agents/llm.py). A free-tier key is not charged. Output tokens "
+                      "include the model's thinking tokens.",
               "routing": eval_routing(llm, pause, limit),
               "answers": eval_answers(llm, pause, limit)}
     config.REPORTS.mkdir(parents=True, exist_ok=True)

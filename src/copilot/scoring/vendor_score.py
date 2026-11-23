@@ -33,7 +33,7 @@ def score_vendors(po: pd.DataFrame, vendors: pd.DataFrame, materials: pd.DataFra
     con = duckdb.connect()
     con.register("po_scored", po_scored)
     con.register("vendors", vendors)
-    return con.execute(SQL_PATH.read_text(), weights or WEIGHTS).df()
+    return con.execute(SQL_PATH.read_text(encoding="utf-8"), weights or WEIGHTS).df()
 
 
 def run() -> pd.DataFrame:

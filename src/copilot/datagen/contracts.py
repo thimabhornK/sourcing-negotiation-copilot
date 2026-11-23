@@ -147,4 +147,5 @@ def write_contracts(terms: pd.DataFrame, vendors: pd.DataFrame, folder: Path) ->
     folder.mkdir(parents=True, exist_ok=True)
     names = vendors.set_index("vendor_id")["vendor_name"]
     for t in terms.to_dict("records"):
-        (folder / f"{t['contract_id']}.md").write_text(render_contract(t, names[t["vendor_id"]]))
+        (folder / f"{t['contract_id']}.md").write_text(render_contract(t, names[t["vendor_id"]]),
+                                                     encoding="utf-8")

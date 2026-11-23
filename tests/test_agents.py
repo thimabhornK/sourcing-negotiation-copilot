@@ -115,7 +115,7 @@ def test_answer_falls_back_to_the_draft_after_two_failed_reviews(trained):
 def test_traces_are_written_as_json_lines(trained, tmp_path):
     path = tmp_path / "trace.jsonl"
     Session(llm=OfflineLLM(), tracer=Tracer(path)).handle("Who delivers late the most?")
-    spans = [json.loads(line) for line in path.read_text().splitlines()]
+    spans = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
     assert [s["agent"] for s in spans] == ["supervisor", "spend_analyst", "writer", "reviewer"]
     assert all(s["ms"] >= 0 and "tokens_in" in s for s in spans)
 

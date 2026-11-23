@@ -129,7 +129,8 @@ def run(llm=None, pause: float = 6.0, limit: int | None = None) -> dict:
               "routing": eval_routing(llm, pause, limit),
               "answers": eval_answers(llm, pause, limit)}
     config.REPORTS.mkdir(parents=True, exist_ok=True)
-    (config.REPORTS / "agent_eval_live.json").write_text(json.dumps(report, indent=2))
+    (config.REPORTS / "agent_eval_live.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 

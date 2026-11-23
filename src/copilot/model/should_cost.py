@@ -182,7 +182,8 @@ def run() -> dict:
     config.REPORTS.mkdir(parents=True, exist_ok=True)
     with open(config.MODELS / MODEL_FILE, "wb") as f:
         pickle.dump(model, f)
-    (config.REPORTS / "should_cost_eval.json").write_text(json.dumps(report, indent=2))
+    (config.REPORTS / "should_cost_eval.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 

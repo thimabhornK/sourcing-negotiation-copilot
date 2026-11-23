@@ -159,7 +159,8 @@ def run() -> dict:
     chunks.to_parquet(config.CURATED / "contract_chunks.parquet", index=False)
     report["contract_clauses_indexed"] = len(chunks)
 
-    (config.REPORTS / "data_quality.json").write_text(json.dumps(report, indent=2))
+    (config.REPORTS / "data_quality.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 

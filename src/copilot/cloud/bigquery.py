@@ -55,7 +55,7 @@ def client():
 def render_sql(name: str, dataset: str, limit: int = 5) -> str:
     """Fill in the dataset and the row limit. The limit is forced to an integer here
     and written into the text, so it does not depend on parameter support in LIMIT."""
-    text = (SQL_DIR / f"{name}.sql").read_text()
+    text = (SQL_DIR / f"{name}.sql").read_text(encoding="utf-8")
     return text.replace("{dataset}", dataset).replace("{limit}", str(int(limit)))
 
 
@@ -169,7 +169,8 @@ def parity() -> dict:
                       "the two engines add floating-point numbers in a different order.",
               "all_match": all(r["match"] for r in results), "queries": results}
     config.REPORTS.mkdir(parents=True, exist_ok=True)
-    (config.REPORTS / "bigquery_parity.json").write_text(json.dumps(report, indent=2))
+    (config.REPORTS / "bigquery_parity.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 

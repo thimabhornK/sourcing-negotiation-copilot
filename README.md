@@ -260,6 +260,21 @@ COPILOT_BACKEND=bigquery make chat
 The sandbox has no DML and its tables expire after 60 days, so the loader
 replaces whole tables and `make bq-load` can simply be run again.
 
+**On Windows (PowerShell).** `make` is usually not installed, so run the
+module directly, and set environment variables with `$env:`:
+
+```powershell
+$env:COPILOT_BQ_PROJECT = "your-project-id"
+python -m copilot.cloud.bigquery load
+python -m copilot.cloud.bigquery parity
+
+$env:COPILOT_BACKEND = "bigquery"; python -m copilot.chat
+```
+
+Each `make` target in the [`Makefile`](Makefile) is one `python -m` command,
+so the same applies to every other step. CI runs the test suite on Windows as
+well as Linux.
+
 **Gemini.**
 
 ```bash

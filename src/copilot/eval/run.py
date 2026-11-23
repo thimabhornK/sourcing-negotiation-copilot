@@ -189,7 +189,7 @@ def run() -> dict:
               "extraction": eval_extraction(), "reviewer": eval_reviewer(test),
               "negotiation_simulation": eval_negotiation(test), "latency": eval_latency()}
     config.REPORTS.mkdir(parents=True, exist_ok=True)
-    (config.REPORTS / "agent_eval.json").write_text(json.dumps(report, indent=2))
+    (config.REPORTS / "agent_eval.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 

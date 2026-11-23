@@ -24,7 +24,7 @@ VENDOR = re.compile(r"vendor (V-\d{4})")
 
 def chunk_contract(path: Path) -> list[dict]:
     """One row per numbered clause."""
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     vendor = VENDOR.search(text)
     return [{"contract_id": path.stem, "vendor_id": vendor.group(1) if vendor else None,
              "clause_no": int(no), "title": title.strip(), "text": " ".join(body.split())}

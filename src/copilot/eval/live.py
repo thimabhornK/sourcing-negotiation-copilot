@@ -54,13 +54,30 @@ def _share(turns: list[dict], applies: str, kept: str) -> dict:
             else None}
 
 
+TOTAL_TURNS = sum(len(c) for c in CONVERSATIONS)
+
+
+def progress(label: str, started: float, span: dict) -> None:
+    """One line per model call, so a long run on a rate-limited key shows it is alive."""
+    notes = []
+    if span.get("rate_limit_waits"):
+        notes.append(f"waited for rate limit x{span['rate_limit_waits']}")
+    if span.get("fallback"):
+        notes.append("model call failed, used rules")
+    print(f"  {label:<16} {time.perf_counter() - started:5.1f}s  {'; '.join(notes)}",
+          flush=True)
+
+
 def eval_routing(llm, pause: float, limit: int | None) -> dict:
     cases = ROUTING[:limit] if limit else ROUTING
     model_right = rules_right = fallbacks = 0
     misrouted, errors = [], []
-    for message, want in cases:
+    for i, message in enumerate(m for m, _ in cases):
+        want = cases[i][1]
         params, span = extract_params(message), {}
+        started = time.perf_counter()
         got = llm.route(message, params, span)
+        progress(f"routing {i + 1}/{len(cases)}", started, span)
         fallbacks += "fallback" in span
         if "fallback" in span and span["fallback"] not in errors:
             errors.append(span["fallback"])
@@ -83,7 +100,11 @@ def eval_answers(llm, pause: float, limit: int | None) -> dict:
         for message in conversation:
             if limit and len(turns) >= limit:
                 break
+            started = time.perf_counter()
             reply = session.handle(message)
+            waits = {"rate_limit_waits": sum(s.get("rate_limit_waits", 0) for s in reply.trace),
+                     **({"fallback": "yes"} if any("fallback" in s for s in reply.trace) else {})}
+            progress(f"answer  {len(turns) + 1}/{limit or TOTAL_TURNS}", started, waits)
             writes = [s for s in reply.trace if s["agent"] == "writer"]
             if not writes:  # the turn asked for missing details; nothing was written
                 continue

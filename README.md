@@ -34,6 +34,17 @@ What to trade:
 (Output shortened. The full answer also lists recent purchases, alternatives
 and a draft email to the vendor.)
 
+**Results at a glance** (synthetic data; details and caveats in [Results so far](#results-so-far))
+
+| What | Result |
+| --- | --- |
+| Fair-price estimate (should-cost), 2025 purchases never seen in training | 4.5% mean absolute error, against 7.2% for the buyers' rule of thumb |
+| Contract search on wording nobody tuned for | right clause in the top 3 for 98.8% of questions with Gemini embeddings |
+| Serving layer moved to BigQuery | all 6 queries return the same rows as the local engine |
+| Cleaning 612,000 order lines | BigQuery 4.3 s against pandas 14.7 s on the same laptop; Spark gives identical results too |
+| Agent access | agent reads its views; raw and curated tables refused (5 of 5 checks) |
+| Answers with Gemini in the loop | 16 of 16 passed the number check; median 7.3 s, about 0.60 USD per 1,000 turns |
+
 ## The problem
 
 A procurement team at a mid-sized manufacturer buys raw materials and parts
@@ -216,10 +227,14 @@ proportion.
 | 612,000 lines (10x) | 11.8 s | 9.5 s | 4.3 s | same counts and totals |
 | 6,120,000 lines (100x) | 126.5 s | 111.0 s | not run | same counts and totals |
 
-pandas and Spark were measured on a 4-core Linux machine, reading the CSV
-included and Spark start-up (7 s) excluded. BigQuery was run from the sandbox
-(`asia-southeast1`), upload excluded (7 s at 1x, 17 s at 10x); it scanned 8.8 MB
-and 88.5 MB. On one machine Spark only catches up with pandas around 10x: its
+Two machines were used. pandas and Spark: a 4-core Linux machine, reading the
+CSV included and Spark start-up (7 s) excluded. BigQuery: sent from a 14-core
+Windows laptop to the sandbox in `asia-southeast1`; the time is the query
+alone, measured on the laptop, with upload excluded (7 s at 1x, 17 s at 10x).
+It scanned 8.8 MB and 88.5 MB. The laptop also ran pandas for the comparison
+(1.4 s at 1x, 14.7 s at 10x, in
+[`clean_benchmark_bigquery.json`](reports/clean_benchmark_bigquery.json)), so
+pandas against BigQuery can also be read on the same machine. On one machine Spark only catches up with pandas around 10x: its
 value is that the same code runs unchanged on Dataproc Serverless across many
 machines, while pandas is limited to one machine's memory. BigQuery needs no
 cluster at all and grew from 2.4 s to 4.3 s for ten times the data, so for a
@@ -231,7 +246,9 @@ DuckDB (the tests translate it).
 
 The vocabulary map behind the 88.1% above was written while looking at the
 evaluation questions, so that figure flatters it. A second set of 18 phrasings
-was written afterwards and never used for tuning.
+(3 per topic) was written afterwards and never used for tuning. Each set is
+asked about every vendor's own contract: 6 topics x 80 vendors = 480
+questions, with the phrasings for a topic taking turns across vendors.
 
 | Method | Tuned questions | New questions | Right clause in the top 3, new questions |
 | --- | --- | --- | --- |

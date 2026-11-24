@@ -71,7 +71,7 @@ five problems:
 | 11. Agent evaluation and tracing | Scores routing, retrieval, extraction, the reviewer and negotiation strategies; records latency, tokens and cost per step | `src/copilot/eval`, `src/copilot/agents/tracing.py` |
 | 12. Cleaning at scale | The cleaning rules on Spark and as BigQuery SQL, with a benchmark that checks all three versions agree | `src/copilot/pipeline/clean_spark.py`, `sql/bigquery/clean_po_lines.sql` |
 | 13. Semantic contract search | Gemini embeddings and a hybrid with keyword search, also searchable in BigQuery with `VECTOR_SEARCH` | `src/copilot/contracts/embed.py` |
-| 14. Least-privilege access | The agents run as their own service account and can read only authorized views without identifiers; a check proves raw and curated tables are refused | `src/copilot/cloud/access.py` |
+| 14. Least-privilege access | The agents run as their own service account and can read only authorized views without identifiers; a check acts as the agent and tries the raw and curated tables, which must be refused | `src/copilot/cloud/access.py` |
 
 The chat has three modes:
 
@@ -200,7 +200,7 @@ Moving the serving layer to BigQuery therefore does not change any answer the
 copilot gives. With 60,000 order lines a question scans about 3 MB, far inside
 the 1 TB of free queries a month.
 
-**Cleaning at scale: pandas, Spark and BigQuery SQL** (`make bench-clean`, written to [`reports/clean_benchmark.json`](reports/clean_benchmark.json))
+**Cleaning at scale: pandas, Spark and BigQuery SQL** (`make bench-clean`, written to [`reports/clean_benchmark.json`](reports/clean_benchmark.json) and [`reports/clean_benchmark_bigquery.json`](reports/clean_benchmark_bigquery.json))
 
 One ERP export fits in memory. A group with several plants sends one export
 per plant, and the cleaning step has to keep up. The same rules are written
@@ -210,19 +210,22 @@ three times: pandas ([`clean.py`](src/copilot/pipeline/clean.py)), Spark
 the export repeated with new PO numbers, so every count must grow exactly in
 proportion.
 
-| Input | pandas | Spark, local mode | Same result |
-| --- | --- | --- | --- |
-| 61,200 lines (1x) | 1.4 s | 9.2 s | every row and value identical |
-| 612,000 lines (10x) | 11.8 s | 9.5 s | same counts and totals |
-| 6,120,000 lines (100x) | 126.5 s | 111.0 s | same counts and totals |
+| Input | pandas | Spark, local mode | BigQuery SQL | Same result |
+| --- | --- | --- | --- | --- |
+| 61,200 lines (1x) | 1.4 s | 9.2 s | 2.4 s | every row and value identical in all three |
+| 612,000 lines (10x) | 11.8 s | 9.5 s | 4.3 s | same counts and totals |
+| 6,120,000 lines (100x) | 126.5 s | 111.0 s | not run | same counts and totals |
 
-Measured on a 4-core Linux machine, reading the CSV included; Spark start-up
-(7 s) excluded. On one machine Spark only catches up with pandas around 10x:
-its value is that the same code runs unchanged on Dataproc Serverless across
-many machines, while pandas is limited to one machine's memory. The BigQuery
-SQL version is checked against pandas on every commit by running it on DuckDB
-(the tests translate it), and on BigQuery itself with
-`python -m copilot.pipeline.benchmark --bigquery`.
+pandas and Spark were measured on a 4-core Linux machine, reading the CSV
+included and Spark start-up (7 s) excluded. BigQuery was run from the sandbox
+(`asia-southeast1`), upload excluded (7 s at 1x, 17 s at 10x); it scanned 8.8 MB
+and 88.5 MB. On one machine Spark only catches up with pandas around 10x: its
+value is that the same code runs unchanged on Dataproc Serverless across many
+machines, while pandas is limited to one machine's memory. BigQuery needs no
+cluster at all and grew from 2.4 s to 4.3 s for ten times the data, so for a
+team whose data already lands in BigQuery the SQL version is the simpler
+choice. The SQL is also checked against pandas on every commit by running it on
+DuckDB (the tests translate it).
 
 **Contract search on wording nobody tuned for** (`python -m copilot.eval.retrieval`, written to [`reports/retrieval_eval.json`](reports/retrieval_eval.json))
 
@@ -230,17 +233,27 @@ The vocabulary map behind the 88.1% above was written while looking at the
 evaluation questions, so that figure flatters it. A second set of 18 phrasings
 was written afterwards and never used for tuning.
 
-| Method | Tuned questions | New questions |
-| --- | --- | --- |
-| Plain TF-IDF | 49.6% | 65.6% |
-| TF-IDF with the vocabulary map | 88.1% | 80.8% |
+| Method | Tuned questions | New questions | Right clause in the top 3, new questions |
+| --- | --- | --- | --- |
+| Plain TF-IDF | 49.6% | 65.6% | 77.7% |
+| TF-IDF with the vocabulary map | 88.1% | 80.8% | 85.0% |
+| Gemini embeddings (`gemini-embedding-001`) | 89.6% | 85.2% | 98.8% |
+| Hybrid of the two (reciprocal-rank fusion) | 93.8% | 83.5% | 90.8% |
 
-Right clause ranked first, 480 questions per set. The new set shows the map
-losing 7 points on wording it has not seen ("Is there a discount for early
-settlement?" lands on Definitions). Gemini embeddings and a hybrid of both
-methods are implemented ([`contracts/embed.py`](src/copilot/contracts/embed.py)),
-searchable in BigQuery with `VECTOR_SEARCH`, and scored on the same two sets by
-`make eval-retrieval`; their figures are added here once measured.
+Right clause ranked first unless stated, 480 questions per set. The vocabulary
+map loses 7 points on wording it has not seen ("Is there a discount for early
+settlement?" lands on Definitions). Embeddings hold up best on new wording,
+and the clause that answers the question is in their top three 98.8% of the
+time; the copilot passes the top three to the writer, so this is the figure
+that matters most. The hybrid is best only on the questions the map was tuned
+for, which is a sign of the map's bias rather than a strength. Most remaining
+embedding misses confuse Warranty with Quality and Inspection, or Termination
+with Force Majeure, clauses that are close in meaning.
+
+The same vectors were loaded into BigQuery and searched with `VECTOR_SEARCH`:
+it returned the same top clause as the local search for all 960 questions, in
+2.8 s for the batch. To use embeddings in the copilot, set
+`COPILOT_RETRIEVAL=embeddings` (or `hybrid`).
 
 ## Quickstart
 
@@ -547,9 +560,9 @@ Check your company's data policy before loading real spend data.
 - Market indices are simulated, not real commodity prices.
 - The de-identification here is keyed hashing for local use. It is a stand-in
   for a managed service, not a compliance control.
-- Contract retrieval is keyword-based and the contracts come from a small set
-  of templates. Real contracts need embeddings, a document parser and review
-  of extracted terms.
+- The contracts come from a small set of templates. Real contracts need a
+  document parser and review of extracted terms, and retrieval scores will be
+  lower on them.
 - The vendor simulator follows fixed rules. Use it to rehearse and to compare
   strategies, not to predict a real vendor.
 - The offline router is a list of patterns. It handles the phrasings in the

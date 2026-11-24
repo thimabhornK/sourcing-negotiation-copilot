@@ -33,3 +33,17 @@ def test_access_check_expects_views_allowed_and_tables_denied(monkeypatch):
     denied = [sql for _, sql, allowed in plan if not allowed]
     assert any("_raw." in sql for sql in denied) and any("p.sourcing_copilot." in sql
                                                          for sql in denied)
+
+
+def test_check_stops_when_it_cannot_act_as_the_agent(monkeypatch):
+    class NoToken:
+        def refresh(self, request):
+            raise RuntimeError("Permission iam.serviceAccounts.getAccessToken denied")
+
+    class FakeClient:
+        _credentials = NoToken()
+
+    monkeypatch.setenv("COPILOT_BQ_PROJECT", "p")
+    monkeypatch.setattr(access, "agent_client", lambda: FakeClient())
+    with pytest.raises(SystemExit, match="Could not act as"):
+        access.check()

@@ -144,6 +144,18 @@ def attempts() -> list[tuple[str, str, bool]]:
 
 def check() -> dict:
     client = agent_client()
+    # Acting as the agent must work before anything else is tested; otherwise every
+    # attempt would fail for the wrong reason and "denied" would mean nothing.
+    try:
+        from google.auth.transport.requests import Request
+
+        client._credentials.refresh(Request())
+    except Exception as exc:
+        raise SystemExit(
+            f"Could not act as {agent_sa()}.\n  {type(exc).__name__}: {str(exc)[:200]}\n"
+            "Grant yourself roles/iam.serviceAccountTokenCreator on the service account "
+            "(see the README), wait a few minutes for it to take effect, and try again."
+        ) from None
     results = []
     for what, sql, expected in attempts():
         try:

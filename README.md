@@ -255,6 +255,25 @@ it returned the same top clause as the local search for all 960 questions, in
 2.8 s for the batch. To use embeddings in the copilot, set
 `COPILOT_RETRIEVAL=embeddings` (or `hybrid`).
 
+**Agents can read only what they need** (`make access-check`, written to [`reports/access_check.json`](reports/access_check.json))
+
+Spend data and vendor records sit next to bank accounts, tax IDs and card
+numbers. The agents run as their own service account, which may read a set of
+authorized views without any identifier, and nothing else. The check acts as
+that account and tries five reads:
+
+| Read attempted by the agent | Result |
+| --- | --- |
+| Spend, through its view | allowed |
+| Vendors, through its view (no tax ID, bank account or email) | allowed |
+| Curated vendor table (identifiers as tokens) | refused (403) |
+| Raw vendor master (bank accounts in clear) | refused (403) |
+| Raw card transactions (card numbers in clear) | refused (403) |
+
+Only a permission refusal counts as "refused"; any other error fails the
+check. Because the limit is enforced by BigQuery and not by the prompt, an
+agent that is tricked into writing its own SQL still cannot reach the raw data.
+
 ## Quickstart
 
 Requires Python 3.11 or newer. No cloud account or API key is needed.

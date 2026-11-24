@@ -1,0 +1,95 @@
+{
+  "machine": {
+    "os": "Linux",
+    "cpu_count": 4,
+    "python": "3.13.18"
+  },
+  "note": "Seconds include reading the CSV. Spark runs in local mode on this machine; its start-up time is reported once and not included. BigQuery time excludes uploading the file.",
+  "runs": [
+    {
+      "scale": 1,
+      "rows_in": 61200,
+      "pandas": {
+        "seconds": 1.36,
+        "summary": {
+          "rows_clean": 58884,
+          "quarantined_missing_qty_or_price": 562,
+          "quarantined_negative_or_zero_qty": 282,
+          "quarantined_price_outlier": 154,
+          "quarantined_unknown_vendor": 118,
+          "sum_qty": 265119512.0,
+          "sum_unit_price_usd": 191953.9439451074,
+          "n_po_date": 58884,
+          "n_promised_date": 58884,
+          "n_received_date": 57112,
+          "sum_qc_pass_rate": 55616.175,
+          "n_vendors": 80
+        }
+      },
+      "spark": {
+        "seconds": 9.19,
+        "same_summary_as_pandas": true,
+        "row_check": {
+          "rows_a": 58884,
+          "rows_b": 58884,
+          "unmatched": 0,
+          "values_different": 0,
+          "max_abs_difference": 0.0,
+          "match": true
+        }
+      }
+    },
+    {
+      "scale": 10,
+      "rows_in": 612000,
+      "pandas": {
+        "seconds": 11.79,
+        "summary": {
+          "rows_clean": 588840,
+          "quarantined_missing_qty_or_price": 5620,
+          "quarantined_negative_or_zero_qty": 2820,
+          "quarantined_price_outlier": 1540,
+          "quarantined_unknown_vendor": 1180,
+          "sum_qty": 2651195120.0,
+          "sum_unit_price_usd": 1919539.439451074,
+          "n_po_date": 588840,
+          "n_promised_date": 588840,
+          "n_received_date": 571120,
+          "sum_qc_pass_rate": 556161.75,
+          "n_vendors": 80
+        }
+      },
+      "spark": {
+        "seconds": 9.45,
+        "same_summary_as_pandas": true
+      }
+    },
+    {
+      "scale": 100,
+      "rows_in": 6120000,
+      "pandas": {
+        "seconds": 126.5,
+        "summary": {
+          "rows_clean": 5888400,
+          "quarantined_missing_qty_or_price": 56200,
+          "quarantined_negative_or_zero_qty": 28200,
+          "quarantined_price_outlier": 15400,
+          "quarantined_unknown_vendor": 11800,
+          "sum_qty": 26511951200.0,
+          "sum_unit_price_usd": 19195394.39451074,
+          "n_po_date": 5888400,
+          "n_promised_date": 5888400,
+          "n_received_date": 5711200,
+          "sum_qc_pass_rate": 5561617.5,
+          "n_vendors": 80
+        }
+      },
+      "spark": {
+        "seconds": 111.02,
+        "same_summary_as_pandas": true
+      }
+    }
+  ],
+  "spark_startup_seconds": 7.3,
+  "spark_version": "4.3.0"
+}

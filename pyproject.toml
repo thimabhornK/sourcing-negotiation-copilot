@@ -20,6 +20,7 @@ dependencies = [
 agents = ["google-genai>=1.0", "google-adk>=1.0"]
 app = ["streamlit>=1.40"]
 cloud = ["google-cloud-bigquery>=3.20", "db-dtypes>=1.2"]
+spark = ["pyspark>=3.5"]
 dev = ["pytest>=8", "ruff>=0.5", "sqlglot>=25"]
 
 [tool.setuptools.packages.find]

@@ -11,3 +11,5 @@ data/serving/
 data/quarantine/
 models/
 traces/
+data/bench/
+data/embeddings/

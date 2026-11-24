@@ -83,3 +83,39 @@ QUESTIONS = {
         "Who is responsible if a defect appears after delivery?",
     ],
 }
+
+
+# Written after the vocabulary map in contracts/search.py, and never used to tune
+# it. Retrieval is reported on both sets so a method tuned to QUESTIONS shows up.
+HELD_OUT_QUESTIONS = {
+    "Payment Terms": [
+        "What is our credit period with this supplier?",
+        "How many days until payment falls due?",
+        "Is there a discount for early settlement?",
+    ],
+    "Volume Rebate": [
+        "Do they give us anything back for high volume?",
+        "Is there an annual volume incentive?",
+        "What happens when our yearly purchases exceed the target?",
+    ],
+    "Delivery and Late Delivery": [
+        "What are we owed if the order arrives after the promised date?",
+        "Are there liquidated damages for lateness?",
+        "What if the supplier misses the delivery date?",
+    ],
+    "Term and Termination": [
+        "What is the notice period to end the agreement?",
+        "When does this agreement expire?",
+        "Can either side walk away from the deal?",
+    ],
+    "Price and Price Adjustment": [
+        "Is there a price escalation clause?",
+        "Can the supplier raise prices if raw material costs go up?",
+        "When can the unit price be revisited?",
+    ],
+    "Warranty": [
+        "What is the warranty period?",
+        "What if parts fail after we receive them?",
+        "How long is the supplier liable for poor workmanship?",
+    ],
+}

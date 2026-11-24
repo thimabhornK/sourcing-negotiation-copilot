@@ -1,0 +1,180 @@
+{
+  "clauses": 960,
+  "embedding_model": null,
+  "sets": {
+    "tuned": {
+      "questions": 480,
+      "plain_tfidf": {
+        "hit_at_1": 0.4958,
+        "hit_at_3": 0.6625,
+        "ms_per_question": 2.8,
+        "distinct_phrasings_missed": [
+          {
+            "question": "Do we get money back if we buy a lot in a year?",
+            "expected": "Volume Rebate",
+            "got": "Definitions"
+          },
+          {
+            "question": "How long are the goods guaranteed?",
+            "expected": "Warranty",
+            "got": "Quality and Inspection"
+          },
+          {
+            "question": "When is the bill due?",
+            "expected": "Payment Terms",
+            "got": "Definitions"
+          },
+          {
+            "question": "Can we exit this contract early?",
+            "expected": "Term and Termination",
+            "got": "Definitions"
+          },
+          {
+            "question": "How often is pricing renegotiated?",
+            "expected": "Price and Price Adjustment",
+            "got": "Definitions"
+          },
+          {
+            "question": "Do we get anything for paying faster?",
+            "expected": "Payment Terms",
+            "got": "Definitions"
+          },
+          {
+            "question": "What bonus applies once purchases pass a threshold?",
+            "expected": "Volume Rebate",
+            "got": "Price and Price Adjustment"
+          },
+          {
+            "question": "Is there a penalty when goods are overdue?",
+            "expected": "Delivery and Late Delivery",
+            "got": "Quality and Inspection"
+          },
+          {
+            "question": "How long does the contract run?",
+            "expected": "Term and Termination",
+            "got": "Scope of Supply"
+          },
+          {
+            "question": "Who is responsible if a defect appears after delivery?",
+            "expected": "Warranty",
+            "got": "Delivery and Late Delivery"
+          },
+          {
+            "question": "Is there a refund for high annual spend?",
+            "expected": "Volume Rebate",
+            "got": "Definitions"
+          }
+        ]
+      },
+      "with_vocabulary": {
+        "hit_at_1": 0.8812,
+        "hit_at_3": 0.8812,
+        "ms_per_question": 2.87,
+        "distinct_phrasings_missed": [
+          {
+            "question": "Do we get money back if we buy a lot in a year?",
+            "expected": "Volume Rebate",
+            "got": "Definitions"
+          },
+          {
+            "question": "Do we get anything for paying faster?",
+            "expected": "Payment Terms",
+            "got": "Definitions"
+          },
+          {
+            "question": "How long does the contract run?",
+            "expected": "Term and Termination",
+            "got": "Definitions"
+          }
+        ]
+      }
+    },
+    "held_out": {
+      "questions": 480,
+      "plain_tfidf": {
+        "hit_at_1": 0.6562,
+        "hit_at_3": 0.7771,
+        "ms_per_question": 2.7,
+        "distinct_phrasings_missed": [
+          {
+            "question": "What is our credit period with this supplier?",
+            "expected": "Payment Terms",
+            "got": "Warranty"
+          },
+          {
+            "question": "When does this agreement expire?",
+            "expected": "Term and Termination",
+            "got": "Scope of Supply"
+          },
+          {
+            "question": "Can the supplier raise prices if raw material costs go up?",
+            "expected": "Price and Price Adjustment",
+            "got": "Warranty"
+          },
+          {
+            "question": "What if parts fail after we receive them?",
+            "expected": "Warranty",
+            "got": "Definitions"
+          },
+          {
+            "question": "What happens when our yearly purchases exceed the target?",
+            "expected": "Volume Rebate",
+            "got": "Definitions"
+          },
+          {
+            "question": "Can either side walk away from the deal?",
+            "expected": "Term and Termination",
+            "got": "Definitions"
+          },
+          {
+            "question": "Is there a discount for early settlement?",
+            "expected": "Payment Terms",
+            "got": "Definitions"
+          },
+          {
+            "question": "What are we owed if the order arrives after the promised date?",
+            "expected": "Delivery and Late Delivery",
+            "got": "Definitions"
+          }
+        ]
+      },
+      "with_vocabulary": {
+        "hit_at_1": 0.8083,
+        "hit_at_3": 0.85,
+        "ms_per_question": 2.94,
+        "distinct_phrasings_missed": [
+          {
+            "question": "What is our credit period with this supplier?",
+            "expected": "Payment Terms",
+            "got": "Warranty"
+          },
+          {
+            "question": "What if parts fail after we receive them?",
+            "expected": "Warranty",
+            "got": "Definitions"
+          },
+          {
+            "question": "What are we owed if the order arrives after the promised date?",
+            "expected": "Delivery and Late Delivery",
+            "got": "Payment Terms"
+          },
+          {
+            "question": "What happens when our yearly purchases exceed the target?",
+            "expected": "Volume Rebate",
+            "got": "Definitions"
+          },
+          {
+            "question": "Is there a discount for early settlement?",
+            "expected": "Payment Terms",
+            "got": "Definitions"
+          },
+          {
+            "question": "Can the supplier raise prices if raw material costs go up?",
+            "expected": "Price and Price Adjustment",
+            "got": "Warranty"
+          }
+        ]
+      }
+    }
+  }
+}

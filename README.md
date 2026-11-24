@@ -69,6 +69,9 @@ five problems:
 | 9. Vendor simulator | A rule-based vendor with a hidden price limit, for rehearsing a negotiation and for comparing strategies | `src/copilot/negotiation/simulator.py` |
 | 10. Agent team and chat | A supervisor routes each message to specialist agents that call tools; a reviewer checks every number in the answer against the tool results. Runs in a terminal or a browser | `src/copilot/agents`, `src/copilot/chat.py`, `app/` |
 | 11. Agent evaluation and tracing | Scores routing, retrieval, extraction, the reviewer and negotiation strategies; records latency, tokens and cost per step | `src/copilot/eval`, `src/copilot/agents/tracing.py` |
+| 12. Cleaning at scale | The cleaning rules on Spark and as BigQuery SQL, with a benchmark that checks all three versions agree | `src/copilot/pipeline/clean_spark.py`, `sql/bigquery/clean_po_lines.sql` |
+| 13. Semantic contract search | Gemini embeddings and a hybrid with keyword search, also searchable in BigQuery with `VECTOR_SEARCH` | `src/copilot/contracts/embed.py` |
+| 14. Least-privilege access | The agents run as their own service account and can read only authorized views without identifiers; a check proves raw and curated tables are refused | `src/copilot/cloud/access.py` |
 
 The chat has three modes:
 
@@ -196,6 +199,48 @@ values.
 Moving the serving layer to BigQuery therefore does not change any answer the
 copilot gives. With 60,000 order lines a question scans about 3 MB, far inside
 the 1 TB of free queries a month.
+
+**Cleaning at scale: pandas, Spark and BigQuery SQL** (`make bench-clean`, written to [`reports/clean_benchmark.json`](reports/clean_benchmark.json))
+
+One ERP export fits in memory. A group with several plants sends one export
+per plant, and the cleaning step has to keep up. The same rules are written
+three times: pandas ([`clean.py`](src/copilot/pipeline/clean.py)), Spark
+([`clean_spark.py`](src/copilot/pipeline/clean_spark.py)) and BigQuery SQL
+([`clean_po_lines.sql`](sql/bigquery/clean_po_lines.sql)). Larger inputs are
+the export repeated with new PO numbers, so every count must grow exactly in
+proportion.
+
+| Input | pandas | Spark, local mode | Same result |
+| --- | --- | --- | --- |
+| 61,200 lines (1x) | 1.4 s | 9.2 s | every row and value identical |
+| 612,000 lines (10x) | 11.8 s | 9.5 s | same counts and totals |
+| 6,120,000 lines (100x) | 126.5 s | 111.0 s | same counts and totals |
+
+Measured on a 4-core Linux machine, reading the CSV included; Spark start-up
+(7 s) excluded. On one machine Spark only catches up with pandas around 10x:
+its value is that the same code runs unchanged on Dataproc Serverless across
+many machines, while pandas is limited to one machine's memory. The BigQuery
+SQL version is checked against pandas on every commit by running it on DuckDB
+(the tests translate it), and on BigQuery itself with
+`python -m copilot.pipeline.benchmark --bigquery`.
+
+**Contract search on wording nobody tuned for** (`python -m copilot.eval.retrieval`, written to [`reports/retrieval_eval.json`](reports/retrieval_eval.json))
+
+The vocabulary map behind the 88.1% above was written while looking at the
+evaluation questions, so that figure flatters it. A second set of 18 phrasings
+was written afterwards and never used for tuning.
+
+| Method | Tuned questions | New questions |
+| --- | --- | --- |
+| Plain TF-IDF | 49.6% | 65.6% |
+| TF-IDF with the vocabulary map | 88.1% | 80.8% |
+
+Right clause ranked first, 480 questions per set. The new set shows the map
+losing 7 points on wording it has not seen ("Is there a discount for early
+settlement?" lands on Definitions). Gemini embeddings and a hybrid of both
+methods are implemented ([`contracts/embed.py`](src/copilot/contracts/embed.py)),
+searchable in BigQuery with `VECTOR_SEARCH`, and scored on the same two sets by
+`make eval-retrieval`; their figures are added here once measured.
 
 ## Quickstart
 
@@ -329,6 +374,51 @@ and the tokens, cost and latency per turn.
 On the free tier Google may use prompts to improve its products. That is
 acceptable for this synthetic dataset and not for real spend data.
 
+**Cleaning on Spark and BigQuery.**
+
+```bash
+pip install -e ".[spark]"        # Spark also needs Java 17 or newer
+make bench-clean                 # pandas and Spark at 1x, 10x and 100x
+
+# The same step as BigQuery SQL: uploads the raw export as text, runs the SQL,
+# compares with pandas. Writes reports/clean_benchmark_bigquery.json.
+python -m copilot.pipeline.benchmark --no-spark --bigquery --scales 1 10
+```
+
+On Dataproc Serverless the Spark version runs as a batch job; it reads the
+export from Cloud Storage instead of a local path and needs no other change.
+
+**Semantic contract search.**
+
+```bash
+python -m copilot.contracts.embed models   # embedding models your key can use
+make embed                                 # about 10 API calls, cached on disk
+make eval-retrieval                        # keyword, embeddings and hybrid, both question sets
+python -m copilot.eval.retrieval --embeddings --bigquery   # same search with VECTOR_SEARCH
+COPILOT_RETRIEVAL=hybrid make chat         # the copilot itself uses hybrid search
+```
+
+**Least-privilege access for the agents.** The agents get their own service
+account. Create it once (the agent may run query jobs, and you may act as it,
+so no key file is needed):
+
+```bash
+P=$COPILOT_BQ_PROJECT
+SA=copilot-agent@$P.iam.gserviceaccount.com
+gcloud services enable iamcredentials.googleapis.com --project $P
+gcloud iam service-accounts create copilot-agent --project $P
+gcloud projects add-iam-policy-binding $P --member serviceAccount:$SA --role roles/bigquery.jobUser
+gcloud iam service-accounts add-iam-policy-binding $SA --project $P \
+  --member user:$(gcloud config get-value account) --role roles/iam.serviceAccountTokenCreator
+
+make access-setup     # raw zone, agent views, authorize the views, grant the agent
+make access-check     # act as the agent: views allowed, raw and curated tables refused
+
+# Run the copilot as the agent, on its views only
+COPILOT_BQ_IMPERSONATE=$SA COPILOT_BQ_DATASET=sourcing_copilot_agent \
+  COPILOT_BACKEND=bigquery make chat
+```
+
 ## How it works
 
 ```mermaid
@@ -402,16 +492,16 @@ A longer explanation of each step is in [`docs/walkthrough.md`](docs/walkthrough
 
 ```
 src/copilot/datagen/    Synthetic data generator and the mess it injects
-src/copilot/pipeline/   Cleaning and de-identification
+src/copilot/pipeline/   Cleaning (pandas, Spark, BigQuery SQL), benchmark, de-identification
 src/copilot/model/      Should-cost training and evaluation
 src/copilot/scoring/    Vendor scorecard
 src/copilot/quote_check.py
-src/copilot/contracts/  Clause search and term extraction
+src/copilot/contracts/  Clause search (keyword, embeddings, hybrid) and term extraction
 src/copilot/tools.py    The functions agents are allowed to call
 src/copilot/negotiation/ Playbook and vendor simulator
 src/copilot/agents/     Supervisor, writer, reviewer, tracing, model boundary, ADK definitions
-src/copilot/eval/       Agent evaluation, offline (run.py) and with a live model (live.py)
-src/copilot/cloud/      BigQuery loader, query runner and parity check
+src/copilot/eval/       Agent evaluation: offline (run.py), live model (live.py), retrieval (retrieval.py)
+src/copilot/cloud/      BigQuery loader, parity check, and agent access control (access.py)
 src/copilot/chat.py     Terminal chat
 app/                    Browser chat (Streamlit)
 adk/                    Entry point for the ADK developer UI
@@ -445,6 +535,9 @@ Check your company's data policy before loading real spend data.
 - [x] BigQuery serving layer with a parity check against the local engine
 - [x] Live-model evaluation harness: routing, answer checks, tokens, cost and latency with Gemini
 - [x] Publish the measured BigQuery and Gemini results
+- [x] Cleaning step on Spark and as BigQuery SQL, with a benchmark that checks they agree
+- [x] Embedding and hybrid contract search, with a held-out question set and `VECTOR_SEARCH`
+- [x] Least-privilege access: agent service account, authorized views, access check
 - [ ] Google Cloud deployment: BigQuery and BigLake lakehouse, PySpark on Dataproc Serverless, Sensitive Data Protection, Spanner, Vertex AI, Agent Development Kit
 
 ## Limitations

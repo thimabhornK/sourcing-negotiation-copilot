@@ -140,7 +140,17 @@ def contract_terms(vendor_id: str) -> dict:
 def search_contracts(question: str, vendor_id: str | None = None, k: int = 3) -> dict:
     """Find the contract clauses that best answer a question, with citations."""
     return {"tool": "search_contracts", "question": question, "vendor_id": vendor_id,
-            "results": load_index().search(question, vendor_id, k)}
+            "results": _search_index().search(question, vendor_id, k)}
+
+
+def _search_index():
+    """Keyword search by default; COPILOT_RETRIEVAL=hybrid adds Gemini embeddings."""
+    mode = os.environ.get("COPILOT_RETRIEVAL", "keyword")
+    if mode == "keyword":
+        return load_index()
+    from copilot.contracts.embed import load_semantic_index
+
+    return load_semantic_index(mode)
 
 
 def rebate_status(vendor_id: str, year: int) -> dict:

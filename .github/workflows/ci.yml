@@ -23,3 +23,19 @@ jobs:
       - run: pip install -e ".[dev,agents,cloud]"
       - run: ruff check src tests app adk
       - run: python -m pytest -q
+
+  spark:
+    # The Spark version of the cleaning step must return the same rows as pandas.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev,spark]"
+      - run: python -m pytest -q tests/test_clean_engines.py

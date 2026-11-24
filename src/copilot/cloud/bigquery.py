@@ -13,6 +13,10 @@ Settings (environment variables):
   COPILOT_BQ_PROJECT    Google Cloud project ID (required)
   COPILOT_BQ_DATASET    dataset name, default sourcing_copilot
   COPILOT_BQ_LOCATION   dataset location, default asia-southeast1
+  COPILOT_BQ_RAW_DATASET    raw zone, default <dataset>_raw
+  COPILOT_BQ_AGENT_DATASET  views the agent may read, default <dataset>_agent
+  COPILOT_BQ_IMPERSONATE    run every query as this service account (the agent's
+                            identity); see copilot.cloud.access
 """
 
 from __future__ import annotations
@@ -39,8 +43,10 @@ def settings() -> dict:
     project = os.environ.get("COPILOT_BQ_PROJECT")
     if not project:
         raise SystemExit("Set COPILOT_BQ_PROJECT to your Google Cloud project ID.")
-    return {"project": project,
-            "dataset": os.environ.get("COPILOT_BQ_DATASET", "sourcing_copilot"),
+    dataset = os.environ.get("COPILOT_BQ_DATASET", "sourcing_copilot")
+    return {"project": project, "dataset": dataset,
+            "raw_dataset": os.environ.get("COPILOT_BQ_RAW_DATASET", f"{dataset}_raw"),
+            "agent_dataset": os.environ.get("COPILOT_BQ_AGENT_DATASET", f"{dataset}_agent"),
             "location": os.environ.get("COPILOT_BQ_LOCATION", "asia-southeast1")}
 
 
@@ -49,7 +55,32 @@ def client():
     from google.cloud import bigquery
 
     s = settings()
-    return bigquery.Client(project=s["project"], location=s["location"])
+    sa = os.environ.get("COPILOT_BQ_IMPERSONATE")
+    return bigquery.Client(project=s["project"], location=s["location"],
+                           credentials=impersonate(sa) if sa else None)
+
+
+def impersonate(service_account: str):
+    """Short-lived credentials for a service account, made from your own login.
+    No key file is involved."""
+    import google.auth
+    from google.auth import impersonated_credentials
+
+    source, _ = google.auth.default()
+    return impersonated_credentials.Credentials(
+        source_credentials=source, target_principal=service_account,
+        target_scopes=["https://www.googleapis.com/auth/cloud-platform"], lifetime=3600)
+
+
+def ensure_dataset(name: str) -> str:
+    """Create the dataset if it does not exist. Returns 'project.dataset'."""
+    from google.cloud import bigquery
+
+    s = settings()
+    dataset = bigquery.Dataset(f"{s['project']}.{name}")
+    dataset.location = s["location"]
+    client().create_dataset(dataset, exists_ok=True)
+    return f"{s['project']}.{name}"
 
 
 def render_sql(name: str, dataset: str, limit: int = 5) -> str:
@@ -90,9 +121,7 @@ def load() -> dict:
 
     s = settings()
     bq = client()
-    dataset = bigquery.Dataset(f"{s['project']}.{s['dataset']}")
-    dataset.location = s["location"]
-    bq.create_dataset(dataset, exists_ok=True)
+    ensure_dataset(s["dataset"])
     job_config = bigquery.LoadJobConfig(source_format=bigquery.SourceFormat.PARQUET,
                                         write_disposition="WRITE_TRUNCATE")
     loaded = {}

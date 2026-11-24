@@ -1,4 +1,4 @@
-.PHONY: install data clean-data train score all test lint check-quote chat app eval eval-live bq-load bq-parity
+.PHONY: install data clean-data train score all test lint check-quote chat app eval eval-live bq-load bq-parity bench-clean eval-retrieval embed access-setup access-check
 
 install:
 	pip install -e ".[dev]"
@@ -43,3 +43,18 @@ bq-parity:       ## Run every query on BigQuery and DuckDB and compare
 
 check-quote:     ## Example: check one quote against should-cost
 	python -m copilot.quote_check --material MAT-0001 --qty 5000 --price 1.62 --currency USD --vendor V-0001 --date 2025-06-15
+
+bench-clean:     ## Clean on pandas and Spark at 1x, 10x, 100x and compare (needs: .[spark], Java)
+	python -m copilot.pipeline.benchmark --scales 1 10 100
+
+embed:           ## Embed every contract clause with Gemini (needs GEMINI_API_KEY)
+	python -m copilot.contracts.embed build
+
+eval-retrieval:  ## Compare keyword, embedding and hybrid contract search
+	python -m copilot.eval.retrieval --embeddings
+
+access-setup:    ## Raw zone, agent views and grants on BigQuery (needs COPILOT_BQ_PROJECT)
+	python -m copilot.cloud.access setup
+
+access-check:    ## Act as the agent and try every dataset
+	python -m copilot.cloud.access check

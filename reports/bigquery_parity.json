@@ -1,0 +1,109 @@
+{
+  "dataset": "sourcing_copilot",
+  "location": "asia-southeast1",
+  "note": "A difference of one unit in the last rounded digit can occur, because the two engines add floating-point numbers in a different order.",
+  "all_match": true,
+  "queries": [
+    {
+      "query": "vendor_score",
+      "params": {
+        "w_delivery": 0.3,
+        "w_quality": 0.25,
+        "w_price": 0.25,
+        "w_risk": 0.2
+      },
+      "rows_local": 80,
+      "rows_bigquery": 80,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 5704.0,
+      "bytes_processed": 3286351,
+      "slot_ms": 63
+    },
+    {
+      "query": "top_vendors_by_spend",
+      "params": {
+        "year": 2025,
+        "category": null,
+        "n": 10
+      },
+      "rows_local": 10,
+      "rows_bigquery": 10,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 875.0,
+      "bytes_processed": 2476471,
+      "slot_ms": 33
+    },
+    {
+      "query": "top_vendors_by_spend",
+      "params": {
+        "year": null,
+        "category": "steel_sheet",
+        "n": 5
+      },
+      "rows_local": 5,
+      "rows_bigquery": 5,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 852.0,
+      "bytes_processed": 2006151,
+      "slot_ms": 24
+    },
+    {
+      "query": "most_expensive_vendors",
+      "params": {
+        "year": 2025,
+        "category": "steel_sheet",
+        "material": null,
+        "n": 10
+      },
+      "rows_local": 10,
+      "rows_bigquery": 10,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 970.0,
+      "bytes_processed": 2948295,
+      "slot_ms": 18
+    },
+    {
+      "query": "late_vendors",
+      "params": {
+        "year": 2025,
+        "n": 10
+      },
+      "rows_local": 10,
+      "rows_bigquery": 10,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 665.0,
+      "bytes_processed": 1872895,
+      "slot_ms": 15
+    },
+    {
+      "query": "spend_by_category",
+      "params": {
+        "year": 2025
+      },
+      "rows_local": 7,
+      "rows_bigquery": 7,
+      "same_keys_and_order": true,
+      "max_abs_difference": 0.0,
+      "max_relative_difference": 0.0,
+      "match": true,
+      "wall_ms": 902.0,
+      "bytes_processed": 2474440,
+      "slot_ms": 18
+    }
+  ]
+}

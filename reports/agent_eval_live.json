@@ -1,0 +1,132 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "date": "2026-11-24",
+  "price_per_million_tokens_usd": {
+    "input": 0.25,
+    "output": 1.5
+  },
+  "note": "Cost is computed from paid-tier list prices (see PRICES in agents/llm.py). A free-tier key is not charged. Output tokens include the model's thinking tokens.",
+  "routing": {
+    "cases": 42,
+    "model_accuracy": 0.9762,
+    "rules_accuracy": 0.9524,
+    "model_calls_that_fell_back_to_rules": 6,
+    "model_errors": [
+      "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+    ],
+    "misrouted_by_model": [
+      {
+        "message": "List the most expensive suppliers in 2025",
+        "expected": "expensive_vendors",
+        "got": "top_vendors"
+      }
+    ]
+  },
+  "answers": {
+    "turns": 16,
+    "passed_number_review_first_time": 1.0,
+    "passed_after_one_retry": 0.0,
+    "replaced_by_template_answer": 0.0,
+    "turns_with_a_model_error": 1,
+    "contract_citations_kept": {
+      "turns": 6,
+      "share": 1.0
+    },
+    "price_verdict_kept": {
+      "turns": 6,
+      "share": 1.0
+    },
+    "latency_ms": {
+      "median": 7261.4,
+      "p95": 10748.4
+    },
+    "tokens_per_turn": {
+      "in": 1217,
+      "out": 198
+    },
+    "cost_per_turn_usd": 0.000601,
+    "cost_per_1000_turns_usd": 0.6,
+    "examples": [
+      {
+        "message": "Top 5 vendors by spend in 2025",
+        "intent": "top_vendors",
+        "answer": "The top 5 vendors by spend in 2025 are:\n\n1. Bangkok Tech Co., Ltd. (V-0021): 9,182,934 USD across 265 order lines\n2. Asia Metal Co., Ltd. (V-0080): 7,119,375 USD across 190 order lines\n3. Eastern Industrial Co., Ltd. (V-0012): 6,687,196 USD across 179 order lines\n4. Asia Tech Co., Ltd. (V-0001): 6,559,227 USD across 262 order lines\n5. Northern Packaging Co., Ltd. (V-0058): 6,191,508 USD across 148 order lines"
+      },
+      {
+        "message": "Which vendors charge the most above should-cost for steel sheet in 2025?",
+        "intent": "expensive_vendors",
+        "answer": "In 2025, the following vendors charged the most above should-cost for steel sheet:\n\n1. Siam Supply Co., Ltd. (V-0002) is 7.1% above should-cost, with 26,135 USD paid in excess across 72 lines.\n2. Lotus Forming Co., Ltd. (V-0053) is 7.0% above should-cost, with 49,953 USD paid in excess across 70 lines.\n3. Northern Industrial Co., Ltd. (V-0014) is 5.4% above should-cost, with 26,285 USD paid in excess across 80 lines.\n4. Pacific Supply Co., Ltd. (V-0048) is 5.0% above should-cost, with 24,794 USD paid in excess across 61 lines.\n5. Mekong Industrial Wire Co., Ltd. (V-0069) is 4.6% above should-cost, with 20,953 USD paid in excess across 60 lines."
+      },
+      {
+        "message": "Who delivers late the most in 2025?",
+        "intent": "late_vendors",
+        "answer": "In 2025, Eastern Metal Co., Ltd. (V-0046) delivered late the most often, with 50.7% of 67 delivered lines arriving behind schedule."
+      },
+      {
+        "message": "Break down 2025 spend by category",
+        "intent": "spend_by_category",
+        "answer": "For the 2025 fiscal year, our spend by category is as follows:\n\nCopper wire: 89,956,773 USD across 19 vendors.\nSteel part: 38,142,354 USD across 17 vendors.\nAluminium part: 21,794,126 USD across 24 vendors.\nPlastic part: 11,719,120 USD across 20 vendors.\nSteel sheet: 11,574,204 USD across 22 vendors.\nPlastic resin: 4,852,116 USD across 11 vendors.\nPackaging: 4,064,876 USD across 17 vendors."
+      },
+      {
+        "message": "How is V-0009 performing?",
+        "intent": "vendor_profile",
+        "answer": "Mekong Alloy Co., Ltd. (V-0009) is currently ranked 76 of 80 with a total score of 70.7 out of 100. Their performance metrics are as follows:\n\nDelivery: 68.6% of lines on time\nQuality: 97.5% pass rate\nPrice: 1.064 against should-cost\nRisk: credit rating C"
+      },
+      {
+        "message": "What are the payment terms with V-0003?",
+        "intent": "contract_question",
+        "answer": "The Buyer shall pay each undisputed invoice within 30 days of the invoice date (net 30). A discount of 1% applies to any invoice settled within 10 days.\n  Source: CT-0003 clause 4 (Payment Terms)"
+      },
+      {
+        "message": "What happens if V-0002 delivers late?",
+        "intent": "contract_question",
+        "answer": "If V-0002 delivers late, they are subject to liquidated damages of 1.5% of the delayed order value per week, capped at a maximum of 10%. This is outlined in CT-0002 clause 6."
+      },
+      {
+        "message": "Are we close to a rebate with V-0002 in 2025?",
+        "intent": "rebate_status",
+        "answer": "Yes, we are approaching a rebate with V-0002 for 2025. Our current spend is 1,333,867 USD, and we are 121,133 USD away from the next tier, which offers a 2% rebate at 1,455,000 USD.\n\nSource: CT-0002 clause 5"
+      },
+      {
+        "message": "How much notice do we need to give to end the contract with V-0010?",
+        "intent": "contract_question",
+        "answer": "To end the contract with V-0010, we must provide 60 days' written notice.\n\nSource: CT-0010 clause 11"
+      },
+      {
+        "message": "Is 1.62 USD fair for 5000 kg of MAT-0001 from V-0002 on 2025-06-15?",
+        "intent": "check_quote",
+        "answer": "The price of 1.62 USD for 5,000 kg of MAT-0001 from V-0002 is OVERPRICED.\n\nThe quoted price is 15.7% above the should-cost of 1.4000 USD (range 1.3071 to 1.4664). This exceeds our flag threshold of 12%. Negotiating to the should-cost could result in a potential saving of 1,100.14 USD.\n\nFor context, the market index for steel_hrc has decreased by 8.2% over the last 3 months and 2.5% over the last 12 months. While V-0002 (Siam Supply Co., Ltd.) has an on-time rate of 91%, they are typically priced 6.9% above should-cost. Recent purchases of this material from other vendors ranged from 1.3581 USD to 1.5420 USD.\n\nI recommend requesting a negotiation playbook to help bring this price down."
+      },
+      {
+        "message": "Build a negotiation playbook for that",
+        "intent": "negotiate",
+        "answer": "Negotiation Playbook: Siam Supply Co., Ltd. (MAT-0001, 5,000 kg)\n\nVerdict: OVERPRICED\nQuoted Price: 1.6200 USD (+15.7% against should-cost)\nOpening Ask: 1.3536 USD\nTarget Price: 1.4000 USD (Saves 1,100.00 USD)\nWalk Away Price: 1.5680 USD\nAlternative: V-0042 at 1.3581 USD (purchase on 2025-06-04)\n\nNegotiation Strategy:\n- Use our cost model: The material should be 1.4000 USD per kg (range 1.3071 to 1.4664). The quote is +15.7% against that.\n- Highlight market trends: The steel_hrc index has moved -2.5% in 12 months and -8.2% in 3 months.\n- Leverage recent benchmarks: V-0042 was paid 1.3581 USD (purchase on 2025-06-04), 16.2% below this quote.\n\nTrade-offs:\n- Give: Pay within 10 days. Get: The 1% early-payment discount already in the contract. [CT-0002 clause 4]\n- Give: Commit the next two orders at the agreed price. Get: Price held at target for six months.\n\nDraft Email:\n\nSubject: MAT-0001 quotation, 5,000 kg\n\nDear Siam Supply Co., Ltd. team,\n\nThank you for your quotation of 1.6200 USD per kg. Before we can award this order, we need to address the following:\n\n- Our cost analysis, based on material content and published index levels, does not support the quoted price. Our model puts this material at 1.4000 USD per kg (range 1.3071 to 1.4664).\n- The steel_hrc index has moved -2.5% in 12 months and -8.2% in 3 months.\n- We have recently bought the same specification at a materially lower price; V-0042 was paid 1.3581 USD (purchase on 2025-06-04), 16.2% below this quote.\n\nWe would like to close at 1.3536 USD per kg. Please send your revised offer by the end of this week.\n\nBest regards,\n\nProcurement"
+      },
+      {
+        "message": "Run the negotiation automatically",
+        "intent": "simulate_auto",
+        "answer": "I have run the automated negotiation simulation for Siam Supply Co., Ltd. regarding the quote of 1.6200 USD. The current quote is OVERPRICED.\n\nUsing a simple 5% discount request, we reached a deal at 1.5390 USD in 3 rounds, resulting in 5.00% savings. By following the full negotiation playbook, we achieved a price of 1.4517 USD in 5 rounds, resulting in 10.39% savings.\n\nFor the final agreement, I recommend targeting 1.4000 USD. Please note that we can leverage the 1% early-payment discount per CT-0002 clause 4 and monitor our progress toward the next rebate tier as outlined in CT-0002 clause 5. These figures are based on a simulation and are not a forecast."
+      },
+      {
+        "message": "Compare the quotes in RFQ-01990",
+        "intent": "rfq_compare",
+        "answer": "For RFQ-01990, we received three quotes for 17,600 units of MAT-0024 on 2025-08-11. The should-cost for this material is 3.0155 USD. All quotes are WITHIN EXPECTED RANGE.\n\nNorthern Plastics Co., Ltd. (V-0019) offered the lowest price at 2.9734 USD, which is -1.4% against the should-cost. They have a vendor score of 91.0 and a lead time of 49 days.\n\nSummit Forming Co., Ltd. (V-0040) quoted 3.0694 USD, which is +1.8% against the should-cost. They have a vendor score of 85.8 and a lead time of 25 days.\n\nBangkok Wire Co., Ltd. (V-0077) quoted 3.1434 USD, which is +4.2% against the should-cost. They have a vendor score of 80.2 and a lead time of 47 days."
+      },
+      {
+        "message": "How do I negotiate RFQ-01990?",
+        "intent": "negotiate",
+        "answer": "Subject: RFQ-01990: MAT-0024 quotation, 17,600 pcs\n\nDear Northern Plastics Co., Ltd. team,\n\nThank you for your quotation of 2.9734 USD per pcs for 17,600 pcs of MAT-0024.\n\nYour quote is WITHIN EXPECTED RANGE. However, given that the aluminium index has moved -10.9% in 12 months and -5.1% in 3 months, we believe there is room for further improvement. \n\nWe would like to open negotiations at 2.8842 USD per pcs, with a target price of 2.9437 USD. To reach an agreement, we are prepared to commit the next two orders at the agreed price if you can hold the price at our target for six months. \n\nPlease note that per CT-0019 clause 5, we are reviewing our current terms. Please send your revised offer by the end of this week.\n\nBest regards,\n\nProcurement Analyst"
+      },
+      {
+        "message": "Is 4.10 USD a good price for 800 pcs of MAT-0012 from V-0007 on 2025-03-10?",
+        "intent": "check_quote",
+        "answer": "No, 4.10 USD is not a good price for 800 pcs of MAT-0012 from V-0007 on 2025-03-10.\n\nThe quote is OVERPRICED, with a gap of +122.3% against our should-cost of 1.8442 (range 1.7360 to 1.9134). By negotiating to the should-cost, we could realize a potential saving of 1,804.66 USD.\n\nFor context, recent purchases of this material between 2025-03-01 and 2025-03-09 ranged from 1.8220 USD to 1.9655 USD. While V-0007 usually prices -0.2% vs should-cost, this specific quote significantly exceeds current market trends, which have seen a -13.7% change over the last 3 months.\n\nI recommend requesting a negotiation playbook to address this pricing."
+      },
+      {
+        "message": "What should we offer back?",
+        "intent": "negotiate",
+        "answer": "Subject: MAT-0012 quotation, 800 kg\n\nDear Siam Alloy Co., Ltd. team,\n\nThank you for your quotation of 4.1000 USD per kg. This is currently OVERPRICED.\n\nBefore we can award this order, we need to address the following:\n\n- Our cost model puts this material at 1.8442 USD per kg (range 1.7360 to 1.9134). The quote is +122.3% against that.\n- V-0076 was paid 1.8220 USD (purchase on 2025-03-01), 55.6% below this quote.\n- A 1.5% rebate (about 23,520 USD) has been earned for 2025 and must be claimed in writing. [CT-0007 clause 5]\n- Only 79% of this vendor's lines arrived on time. Late delivery carries damages of 1% per week under the contract. [CT-0007 clause 6]\n\nWe would like to open negotiations at 1.7901 USD per kg, with a target price of 1.8442 USD. We are willing to consider the following trades:\n\n- Give: Shorten payment from 60 to 30 days. Get: A further 1% off the unit price. [CT-0007 clause 4]\n- Give: Commit the next two orders at the agreed price. Get: Price held at target for six months.\n\nPlease send your revised offer by the end of this week.\n\nBest regards,\n\nProcurement"
+      }
+    ]
+  }
+}

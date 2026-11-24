@@ -154,16 +154,48 @@ playbook sizes its ask to the real gap: it recovers most of a markup that a
 flat 5% request leaves in place, and does not over-ask on a fair quote. It is
 not a forecast of savings with real vendors.
 
-**Not yet measured.** Two parts need credentials and have not been run yet,
-so there are no figures for them here:
+**Gemini in the loop** (`python -m copilot.eval.live`, written to [`reports/agent_eval_live.json`](reports/agent_eval_live.json))
 
-- The Gemini path (routing and wording by a language model). `make eval-live`
-  measures it and writes `reports/agent_eval_live.json`.
-- The BigQuery serving layer. `make bq-parity` runs it and writes
-  `reports/bigquery_parity.json`.
+Run on 24 November 2026 with `gemini-3.1-flash-lite` on a free-tier API key,
+the same 42 routing messages and 16 conversation turns used above.
 
-Both are implemented, their SQL and fallbacks are covered by tests, and the
-steps to run them are in [Running on Google Cloud](#running-on-google-cloud).
+| What is measured | Result |
+| --- | --- |
+| Routing, 42 messages | 97.6% correct, against 95.2% for the rules alone |
+| Answers that passed the number check the first time | 16 of 16 |
+| Answers replaced by the template because the model got a figure wrong | 0 |
+| Contract citations kept in the model's wording | 6 of 6 |
+| Price verdicts (above / within / below range) kept | 6 of 6 |
+| Response time per turn with the model | median 7.3 s, p95 10.7 s |
+| Tokens per turn | about 1,200 in, 200 out |
+| Cost at paid-tier list price | about 0.60 USD per 1,000 turns |
+
+During the run the model service answered 6 of the 42 routing calls with
+"503, high demand". Those messages were routed by the rules instead, which is
+the designed fallback; the user still gets an answer. The one message the
+model routed wrongly ("List the most expensive suppliers") is listed in the
+report. The free tier also has daily and per-minute quotas, which is why the
+harness pauses between calls and retries on rate limits and timeouts.
+
+**BigQuery serving layer** (`python -m copilot.cloud.bigquery parity`, written to [`reports/bigquery_parity.json`](reports/bigquery_parity.json))
+
+The curated tables were loaded into BigQuery (sandbox, `asia-southeast1`) and
+the six queries the agents call were run on both BigQuery and the local DuckDB
+engine. Every query returned the same rows in the same order with the same
+values.
+
+| Query | Rows | Time | Data scanned |
+| --- | --- | --- | --- |
+| Vendor scorecard | 80 | 5.7 s (first call, includes connecting) | 3.3 MB |
+| Top vendors by spend, 2025 | 10 | 0.9 s | 2.5 MB |
+| Top vendors by spend, one category | 5 | 0.9 s | 2.0 MB |
+| Vendors furthest above should-cost | 10 | 1.0 s | 2.9 MB |
+| Vendors with the most late deliveries | 10 | 0.7 s | 1.9 MB |
+| Spend by category | 7 | 0.9 s | 2.5 MB |
+
+Moving the serving layer to BigQuery therefore does not change any answer the
+copilot gives. With 60,000 order lines a question scans about 3 MB, far inside
+the 1 TB of free queries a month.
 
 ## Quickstart
 
@@ -280,8 +312,13 @@ well as Linux.
 ```bash
 pip install -e ".[agents]"
 export GEMINI_API_KEY=your-key
-make eval-live    # about 10 minutes on a free key; add --limit to shorten
+make eval-live    # 15 to 30 minutes on a free key; add --limit 5 for a quick check
 ```
+
+Free-tier quotas differ by model and reset daily. If the default model answers
+"429 RESOURCE_EXHAUSTED", choose a lighter one with
+`COPILOT_GEMINI_MODEL=gemini-3.1-flash-lite`, which is the model the results
+above were measured with, and add `--pause 10` to space out the calls.
 
 This compares the model router with the rules on the same 42 messages, then
 runs 16 conversation turns and records how often the model's wording passed
@@ -407,7 +444,7 @@ Check your company's data policy before loading real spend data.
 - [x] Evaluation harness for the agents and per-step tracing
 - [x] BigQuery serving layer with a parity check against the local engine
 - [x] Live-model evaluation harness: routing, answer checks, tokens, cost and latency with Gemini
-- [ ] Publish the measured BigQuery and Gemini results
+- [x] Publish the measured BigQuery and Gemini results
 - [ ] Google Cloud deployment: BigQuery and BigLake lakehouse, PySpark on Dataproc Serverless, Sensitive Data Protection, Spanner, Vertex AI, Agent Development Kit
 
 ## Limitations

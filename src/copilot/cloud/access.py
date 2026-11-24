@@ -143,6 +143,10 @@ def attempts() -> list[tuple[str, str, bool]]:
 
 
 def check() -> dict:
+    s = bq.settings()
+    if os.environ.get("COPILOT_BQ_IMPERSONATE") or s["dataset"].endswith("_agent"):
+        raise SystemExit("Run the check with your own settings, not the agent's: unset "
+                         "COPILOT_BQ_IMPERSONATE and COPILOT_BQ_DATASET first.")
     client = agent_client()
     # Acting as the agent must work before anything else is tested; otherwise every
     # attempt would fail for the wrong reason and "denied" would mean nothing.
@@ -162,13 +166,19 @@ def check() -> dict:
             rows = client.query(sql).result().to_dataframe(create_bqstorage_client=False)
             allowed, detail = True, f"{len(rows)} row(s), columns: {', '.join(rows.columns)}"
             leaked = sorted(SENSITIVE & set(rows.columns))
-        except Exception as exc:  # Forbidden / AccessDenied is the expected outcome
+        except Exception as exc:
             allowed, detail, leaked = False, type(exc).__name__ + ": " + str(exc)[:160], []
+            # Only a permission refusal counts as "denied". Any other error (a typo
+            # in a table name, a missing column) proves nothing about access.
+            if not ("403" in str(exc) or "Forbidden" in type(exc).__name__
+                    or "Access Denied" in str(exc)):
+                allowed = None
         ok = allowed == expected and not leaked
         results.append({"attempt": what, "expected": "allowed" if expected else "denied",
-                        "result": "allowed" if allowed else "denied", "ok": ok,
+                        "result": {True: "allowed", False: "denied", None: "error"}[allowed],
+                        "ok": ok,
                         "detail": detail})
-        print(f"  {'OK ' if ok else 'BAD'}  {what:<45} {'allowed' if allowed else 'denied'}")
+        print(f"  {'OK ' if ok else 'BAD'}  {what:<45} {results[-1]['result']}")
     # The report is meant to be published, so the project ID is replaced.
     project = bq.settings()["project"]
     for r in results:

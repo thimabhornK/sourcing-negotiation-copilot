@@ -1,13 +1,13 @@
 {
   "clauses": 960,
-  "embedding_model": null,
+  "embedding_model": "gemini-embedding-001",
   "sets": {
     "tuned": {
       "questions": 480,
       "plain_tfidf": {
         "hit_at_1": 0.4958,
         "hit_at_3": 0.6625,
-        "ms_per_question": 2.8,
+        "ms_per_question": 1.8,
         "distinct_phrasings_missed": [
           {
             "question": "Do we get money back if we buy a lot in a year?",
@@ -69,7 +69,7 @@
       "with_vocabulary": {
         "hit_at_1": 0.8812,
         "hit_at_3": 0.8812,
-        "ms_per_question": 2.87,
+        "ms_per_question": 1.96,
         "distinct_phrasings_missed": [
           {
             "question": "Do we get money back if we buy a lot in a year?",
@@ -87,6 +87,45 @@
             "got": "Definitions"
           }
         ]
+      },
+      "embeddings": {
+        "hit_at_1": 0.8958,
+        "hit_at_3": 1.0,
+        "ms_per_question": 18.86,
+        "distinct_phrasings_missed": [
+          {
+            "question": "How much notice do we need to give to cancel?",
+            "expected": "Term and Termination",
+            "got": "Force Majeure"
+          },
+          {
+            "question": "What cover do we have against faulty material?",
+            "expected": "Warranty",
+            "got": "Quality and Inspection"
+          },
+          {
+            "question": "Who is responsible if a defect appears after delivery?",
+            "expected": "Warranty",
+            "got": "Quality and Inspection"
+          }
+        ]
+      },
+      "hybrid": {
+        "hit_at_1": 0.9375,
+        "hit_at_3": 0.9458,
+        "ms_per_question": 3.55,
+        "distinct_phrasings_missed": [
+          {
+            "question": "Do we get money back if we buy a lot in a year?",
+            "expected": "Volume Rebate",
+            "got": "Price and Price Adjustment"
+          },
+          {
+            "question": "How long does the contract run?",
+            "expected": "Term and Termination",
+            "got": "Price and Price Adjustment"
+          }
+        ]
       }
     },
     "held_out": {
@@ -94,7 +133,7 @@
       "plain_tfidf": {
         "hit_at_1": 0.6562,
         "hit_at_3": 0.7771,
-        "ms_per_question": 2.7,
+        "ms_per_question": 1.77,
         "distinct_phrasings_missed": [
           {
             "question": "What is our credit period with this supplier?",
@@ -141,7 +180,7 @@
       "with_vocabulary": {
         "hit_at_1": 0.8083,
         "hit_at_3": 0.85,
-        "ms_per_question": 2.94,
+        "ms_per_question": 1.71,
         "distinct_phrasings_missed": [
           {
             "question": "What is our credit period with this supplier?",
@@ -174,7 +213,74 @@
             "got": "Warranty"
           }
         ]
+      },
+      "embeddings": {
+        "hit_at_1": 0.8521,
+        "hit_at_3": 0.9875,
+        "ms_per_question": 19.5,
+        "distinct_phrasings_missed": [
+          {
+            "question": "What if parts fail after we receive them?",
+            "expected": "Warranty",
+            "got": "Quality and Inspection"
+          },
+          {
+            "question": "Can either side walk away from the deal?",
+            "expected": "Term and Termination",
+            "got": "Force Majeure"
+          },
+          {
+            "question": "What happens when our yearly purchases exceed the target?",
+            "expected": "Volume Rebate",
+            "got": "Price and Price Adjustment"
+          },
+          {
+            "question": "Is there a discount for early settlement?",
+            "expected": "Payment Terms",
+            "got": "Volume Rebate"
+          }
+        ]
+      },
+      "hybrid": {
+        "hit_at_1": 0.8354,
+        "hit_at_3": 0.9083,
+        "ms_per_question": 3.26,
+        "distinct_phrasings_missed": [
+          {
+            "question": "What is our credit period with this supplier?",
+            "expected": "Payment Terms",
+            "got": "Warranty"
+          },
+          {
+            "question": "What if parts fail after we receive them?",
+            "expected": "Warranty",
+            "got": "Definitions"
+          },
+          {
+            "question": "What happens when our yearly purchases exceed the target?",
+            "expected": "Volume Rebate",
+            "got": "Price and Price Adjustment"
+          },
+          {
+            "question": "What are we owed if the order arrives after the promised date?",
+            "expected": "Delivery and Late Delivery",
+            "got": "Payment Terms"
+          },
+          {
+            "question": "Is there a discount for early settlement?",
+            "expected": "Payment Terms",
+            "got": "Price and Price Adjustment"
+          }
+        ]
       }
     }
+  },
+  "bigquery_vector_search": {
+    "questions": 960,
+    "same_top_clause_as_local": 960,
+    "hit_at_1": 0.874,
+    "seconds": 2.79,
+    "bytes_processed": 11875010,
+    "match": true
   }
 }

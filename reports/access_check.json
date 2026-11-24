@@ -1,0 +1,41 @@
+{
+  "service_account": "copilot-agent@<project>.iam.gserviceaccount.com",
+  "all_ok": true,
+  "attempts": [
+    {
+      "attempt": "agent view: spend",
+      "expected": "allowed",
+      "result": "allowed",
+      "ok": true,
+      "detail": "1 row(s), columns: n"
+    },
+    {
+      "attempt": "agent view: vendors",
+      "expected": "allowed",
+      "result": "allowed",
+      "ok": true,
+      "detail": "1 row(s), columns: vendor_id, vendor_name, country, currency, categories, credit_rating"
+    },
+    {
+      "attempt": "curated table: vendors (tokens)",
+      "expected": "denied",
+      "result": "denied",
+      "ok": true,
+      "detail": "Forbidden: 403 Access Denied: Table <project>:sourcing_copilot.vendors: User does not have permission to query table <project>:sourcing_copilot.ven"
+    },
+    {
+      "attempt": "raw table: vendor master (bank accounts)",
+      "expected": "denied",
+      "result": "denied",
+      "ok": true,
+      "detail": "Forbidden: 403 Access Denied: Table <project>:sourcing_copilot_raw.vendor_master: User does not have permission to query table <project>:sourcing_c"
+    },
+    {
+      "attempt": "raw table: card transactions (card numbers)",
+      "expected": "denied",
+      "result": "denied",
+      "ok": true,
+      "detail": "Forbidden: 403 Access Denied: Table <project>:sourcing_copilot_raw.pcard_transactions: User does not have permission to query table <project>:sourc"
+    }
+  ]
+}

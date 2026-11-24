@@ -157,8 +157,12 @@ def check() -> dict:
                         "result": "allowed" if allowed else "denied", "ok": ok,
                         "detail": detail})
         print(f"  {'OK ' if ok else 'BAD'}  {what:<45} {'allowed' if allowed else 'denied'}")
-    report = {"service_account": agent_sa(), "all_ok": all(r["ok"] for r in results),
-              "attempts": results}
+    # The report is meant to be published, so the project ID is replaced.
+    project = bq.settings()["project"]
+    for r in results:
+        r["detail"] = r["detail"].replace(project, "<project>")
+    report = {"service_account": agent_sa().replace(project, "<project>"),
+              "all_ok": all(r["ok"] for r in results), "attempts": results}
     config.REPORTS.mkdir(parents=True, exist_ok=True)
     (config.REPORTS / "access_check.json").write_text(json.dumps(report, indent=2),
                                                       encoding="utf-8")
